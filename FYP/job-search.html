@@ -112,18 +112,78 @@
                 </div>
               </div>
             </div>
-            <button type="button" class="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-100 transition">
-              Salary
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-neutral-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd" />
-              </svg>
-            </button>
-            <button type="button" class="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-100 transition">
-              Posted date
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-neutral-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd" />
-              </svg>
-            </button>
+            <!-- Salary from dropdown -->
+            <div class="relative" id="salaryFromDropdown">
+              <button type="button" id="salaryFromBtn"
+                      class="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-100 transition">
+                <span id="salaryFromBtnLabel">Salary from $0</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-neutral-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <div id="salaryFromMenu"
+                   class="hidden absolute left-0 mt-3 w-72 rounded-3xl border border-neutral-200 bg-white shadow-2xl p-3 z-20">
+                <div class="text-xs font-semibold text-neutral-500 px-3 py-1">Monthly (HKD)</div>
+                <div class="space-y-1 max-h-72 overflow-y-auto p-1">
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="salaryFromOption h-5 w-5 text-cyan-600" type="radio" name="salaryFrom" value="0" checked><span class="text-sm">$0</span></label>
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="salaryFromOption h-5 w-5 text-cyan-600" type="radio" name="salaryFrom" value="11"><span class="text-sm">11K</span></label>
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="salaryFromOption h-5 w-5 text-cyan-600" type="radio" name="salaryFrom" value="14"><span class="text-sm">14K</span></label>
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="salaryFromOption h-5 w-5 text-cyan-600" type="radio" name="salaryFrom" value="17"><span class="text-sm">17K</span></label>
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="salaryFromOption h-5 w-5 text-cyan-600" type="radio" name="salaryFrom" value="20"><span class="text-sm">20K</span></label>
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="salaryFromOption h-5 w-5 text-cyan-600" type="radio" name="salaryFrom" value="25"><span class="text-sm">25K</span></label>
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="salaryFromOption h-5 w-5 text-cyan-600" type="radio" name="salaryFrom" value="30"><span class="text-sm">30K</span></label>
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="salaryFromOption h-5 w-5 text-cyan-600" type="radio" name="salaryFrom" value="35"><span class="text-sm">35K</span></label>
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="salaryFromOption h-5 w-5 text-cyan-600" type="radio" name="salaryFrom" value="40"><span class="text-sm">40K</span></label>
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="salaryFromOption h-5 w-5 text-cyan-600" type="radio" name="salaryFrom" value="50"><span class="text-sm">50K</span></label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Salary to dropdown -->
+            <div class="relative" id="salaryToDropdown">
+              <button type="button" id="salaryToBtn"
+                      class="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-100 transition">
+                <span id="salaryToBtnLabel">To $120K+</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-neutral-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <div id="salaryToMenu"
+                   class="hidden absolute left-0 mt-3 w-72 rounded-3xl border border-neutral-200 bg-white shadow-2xl p-3 z-20">
+                <div class="text-xs font-semibold text-neutral-500 px-3 py-1">Monthly (HKD)</div>
+                <div class="space-y-1 max-h-72 overflow-y-auto p-1">
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="salaryToOption h-5 w-5 text-cyan-600" type="radio" name="salaryTo" value="120" checked><span class="text-sm">120K+</span></label>
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="salaryToOption h-5 w-5 text-cyan-600" type="radio" name="salaryTo" value="80"><span class="text-sm">80K</span></label>
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="salaryToOption h-5 w-5 text-cyan-600" type="radio" name="salaryTo" value="60"><span class="text-sm">60K</span></label>
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="salaryToOption h-5 w-5 text-cyan-600" type="radio" name="salaryTo" value="50"><span class="text-sm">50K</span></label>
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="salaryToOption h-5 w-5 text-cyan-600" type="radio" name="salaryTo" value="40"><span class="text-sm">40K</span></label>
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="salaryToOption h-5 w-5 text-cyan-600" type="radio" name="salaryTo" value="30"><span class="text-sm">30K</span></label>
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="salaryToOption h-5 w-5 text-cyan-600" type="radio" name="salaryTo" value="25"><span class="text-sm">25K</span></label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Posted date dropdown -->
+            <div class="relative" id="postedDropdown">
+              <button type="button" id="postedBtn"
+                      class="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-100 transition">
+                <span id="postedBtnLabel">Posted date: Any time</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-neutral-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <div id="postedMenu"
+                   class="hidden absolute left-0 mt-3 w-72 rounded-3xl border border-neutral-200 bg-white shadow-2xl p-3 z-20">
+                <div class="space-y-1 p-1">
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="postedOption h-5 w-5 text-cyan-600" type="radio" name="posted" value="" checked><span class="text-sm">Any time</span></label>
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="postedOption h-5 w-5 text-cyan-600" type="radio" name="posted" value="1"><span class="text-sm">Today</span></label>
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="postedOption h-5 w-5 text-cyan-600" type="radio" name="posted" value="3"><span class="text-sm">Past 3 days</span></label>
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="postedOption h-5 w-5 text-cyan-600" type="radio" name="posted" value="7"><span class="text-sm">Past 7 days</span></label>
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="postedOption h-5 w-5 text-cyan-600" type="radio" name="posted" value="14"><span class="text-sm">Past 14 days</span></label>
+                  <label class="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-50 cursor-pointer"><input class="postedOption h-5 w-5 text-cyan-600" type="radio" name="posted" value="30"><span class="text-sm">Past 30 days</span></label>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -194,12 +254,18 @@
       if (category === 'Any category') category = '';
       var location = (locEl && locEl.value || '').trim();
       var jobTypes = (window.__easyjob_jobTypes && window.__easyjob_jobTypes.length) ? window.__easyjob_jobTypes : [];
+      var salaryFrom = (window.__easyjob_salaryFromK !== undefined && window.__easyjob_salaryFromK !== null) ? window.__easyjob_salaryFromK : 0;
+      var salaryTo = (window.__easyjob_salaryToK !== undefined && window.__easyjob_salaryToK !== null) ? window.__easyjob_salaryToK : 120;
+      var postedDays = window.__easyjob_postedDays || '';
 
       var params = new URLSearchParams();
       if (q) params.set('q', q);
       if (category) params.set('category', category);
       if (location) params.set('location', location);
       if (jobTypes.length) params.set('type', jobTypes.join(','));
+      params.set('min_k', String(salaryFrom));
+      params.set('max_k', String(salaryTo));
+      if (postedDays) params.set('posted_days', postedDays);
 
       if (btn) { btn.disabled = true; btn.textContent = 'Searching...'; }
       if (grid) grid.innerHTML = '<div class="col-span-full text-center text-gray-500">Loading...</div>';
@@ -229,6 +295,26 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+      function setupSingleMenu(dropdownId, btnId, menuId) {
+        var dropdown = document.getElementById(dropdownId);
+        var btn = document.getElementById(btnId);
+        var menu = document.getElementById(menuId);
+        if (!dropdown || !btn || !menu) return null;
+        function open() { menu.classList.remove('hidden'); }
+        function close() { menu.classList.add('hidden'); }
+        function toggle() { menu.classList.contains('hidden') ? open() : close(); }
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          toggle();
+        });
+        menu.addEventListener('click', function (e) { e.stopPropagation(); });
+        document.addEventListener('click', function (e) {
+          if (!dropdown.contains(e.target)) close();
+        });
+        return { close: close };
+      }
+
       // Job type dropdown (multi-select)
       (function () {
         var dropdown = document.getElementById('jobTypeDropdown');
@@ -277,6 +363,89 @@
         });
 
         updateLabel();
+      })();
+
+      // Salary from dropdown
+      (function () {
+        var ref = setupSingleMenu('salaryFromDropdown', 'salaryFromBtn', 'salaryFromMenu');
+        var label = document.getElementById('salaryFromBtnLabel');
+        var menu = document.getElementById('salaryFromMenu');
+        if (!label || !menu) return;
+        function update() {
+          var selected = menu.querySelector('input.salaryFromOption:checked');
+          var k = selected ? Number(selected.value) : 0;
+          if (isNaN(k)) k = 0;
+          window.__easyjob_salaryFromK = k;
+          label.textContent = 'Salary from $' + k + 'K';
+        }
+        menu.querySelectorAll('input.salaryFromOption').forEach(function (radio) {
+          radio.addEventListener('change', function () {
+            update();
+            if ((window.__easyjob_salaryToK || 120) < (window.__easyjob_salaryFromK || 0)) {
+              window.__easyjob_salaryToK = window.__easyjob_salaryFromK;
+              var toRadio = document.querySelector('input.salaryToOption[value="' + String(window.__easyjob_salaryToK) + '"]');
+              if (toRadio) toRadio.checked = true;
+              var toLabel = document.getElementById('salaryToBtnLabel');
+              if (toLabel) toLabel.textContent = 'To $' + window.__easyjob_salaryToK + 'K';
+            }
+            runSearch();
+            if (ref) ref.close();
+          });
+        });
+        update();
+      })();
+
+      // Salary to dropdown
+      (function () {
+        var ref = setupSingleMenu('salaryToDropdown', 'salaryToBtn', 'salaryToMenu');
+        var label = document.getElementById('salaryToBtnLabel');
+        var menu = document.getElementById('salaryToMenu');
+        if (!label || !menu) return;
+        function update() {
+          var selected = menu.querySelector('input.salaryToOption:checked');
+          var k = selected ? Number(selected.value) : 120;
+          if (isNaN(k)) k = 120;
+          window.__easyjob_salaryToK = k;
+          label.textContent = 'To $' + k + (k >= 120 ? 'K+' : 'K');
+        }
+        menu.querySelectorAll('input.salaryToOption').forEach(function (radio) {
+          radio.addEventListener('change', function () {
+            update();
+            if ((window.__easyjob_salaryToK || 120) < (window.__easyjob_salaryFromK || 0)) {
+              alert('Maximum salary must be greater than or equal to minimum salary.');
+              window.__easyjob_salaryToK = window.__easyjob_salaryFromK || 0;
+              var fallback = document.querySelector('input.salaryToOption[value="' + String(window.__easyjob_salaryToK) + '"]');
+              if (fallback) fallback.checked = true;
+              update();
+            }
+            runSearch();
+            if (ref) ref.close();
+          });
+        });
+        update();
+      })();
+
+      // Posted date dropdown
+      (function () {
+        var ref = setupSingleMenu('postedDropdown', 'postedBtn', 'postedMenu');
+        var label = document.getElementById('postedBtnLabel');
+        var menu = document.getElementById('postedMenu');
+        if (!label || !menu) return;
+        function update() {
+          var selected = menu.querySelector('input.postedOption:checked');
+          var val = selected ? selected.value : '';
+          var text = selected ? selected.parentElement.textContent.trim() : 'Any time';
+          window.__easyjob_postedDays = val;
+          label.textContent = 'Posted date: ' + text;
+        }
+        menu.querySelectorAll('input.postedOption').forEach(function (radio) {
+          radio.addEventListener('change', function () {
+            update();
+            runSearch();
+            if (ref) ref.close();
+          });
+        });
+        update();
       })();
 
       var btn = document.getElementById('jobSearchBtn');

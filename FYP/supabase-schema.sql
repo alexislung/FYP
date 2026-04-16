@@ -10,7 +10,7 @@ create table if not exists public.cv_documents (
   content_html text not null,
   draft_json jsonb,
   created_at timestamptz not null default now()
-);
+);image.png
 
 -- 2) Cover letters
 create table if not exists public.cover_letters (

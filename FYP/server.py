@@ -26,8 +26,25 @@ def get_jobs():
         location = request.args.get('location')
         salary = request.args.get('salary')
         category = request.args.get('category')
+        type_csv = request.args.get('type')
+        min_k = request.args.get('min_k')
+        max_k = request.args.get('max_k')
+        posted_days = request.args.get('posted_days')
+
+        job_types = []
+        if type_csv:
+            job_types = [s.strip() for s in type_csv.split(',') if s and s.strip()]
         
-        jobs = database.get_jobs(q=q, location=location, min_salary=salary, category=category)
+        jobs = database.get_jobs(
+            q=q,
+            location=location,
+            min_salary=salary,
+            category=category,
+            job_types=job_types,
+            min_k=min_k,
+            max_k=max_k,
+            posted_days=posted_days
+        )
         return jsonify(jobs)
     except Exception as e:
         print(f"Error getting jobs: {e}")

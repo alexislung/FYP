@@ -2,6 +2,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 import datetime
 import os
+import re
 
 # 数据库连接配置 (Supabase Connection Pooler)
 DB_HOST = "aws-1-ap-southeast-1.pooler.supabase.com"
@@ -29,13 +30,51 @@ def init_db():
         print("✅ Connected successfully")
         conn.close()
 
+def _extract_salary_k_range(text):
+    s = (text or "").lower()
+    nums = []
+    for m in re.findall(r"(\d+(?:\.\d+)?)\s*k", s):
+        try:
+            nums.append(float(m))
+        except Exception:
+            pass
+    if not nums:
+        for m in re.findall(r"(\d{5,6})", s):
+            try:
+                nums.append(float(m) / 1000.0)
+            except Exception:
+                pass
+    if not nums:
+        return (None, None)
+    if len(nums) == 1:
+        return (nums[0], nums[0])
+    return (min(nums), max(nums))
+
+def _match_job_type(job, selected_types):
+    if not selected_types:
+        return True
+    haystack = (
+        f"{job.get('title', '')} {job.get('requirements', '')} {job.get('category', '')}"
+    ).lower()
+    mapping = {
+        "full time": ["full-time", "full time", "permanent"],
+        "part time": ["part-time", "part time"],
+        "contract/temp": ["contract", "temp", "temporary", "fixed-term"],
+        "casual/vacation": ["casual", "vacation", "seasonal"]
+    }
+    for t in selected_types:
+        keys = mapping.get((t or "").strip().lower(), [])
+        if any(k in haystack for k in keys):
+            return True
+    return False
+
 # --- Get job list (supports search) ---
-def get_jobs(limit=50, q=None, location=None, min_salary=None, category=None):
+def get_jobs(limit=50, q=None, location=None, min_salary=None, category=None, job_types=None, min_k=None, max_k=None, posted_days=None):
     try:
         conn = get_db_connection()
         if conn is None: return []
         
-        # 基础查询
+        # Base query
         query = "SELECT * FROM jobs WHERE 1=1"
         params = []
         
@@ -55,9 +94,18 @@ def get_jobs(limit=50, q=None, location=None, min_salary=None, category=None):
             params.append(f"%{category.strip()}%")
             
         if min_salary and min_salary.strip():
-            # 简单的模糊匹配薪资
+            # Legacy salary fuzzy match
             query += " AND salary_range LIKE %s"
             params.append(f"%{min_salary.strip()}%")
+
+        if posted_days:
+            try:
+                days = int(str(posted_days).strip())
+                if days > 0:
+                    query += " AND created_at >= (NOW() - (%s || ' days')::interval)"
+                    params.append(str(days))
+            except Exception:
+                pass
             
         query += " ORDER BY id DESC LIMIT %s"
         params.append(limit)
@@ -67,10 +115,38 @@ def get_jobs(limit=50, q=None, location=None, min_salary=None, category=None):
         rows = c.fetchall()
         conn.close()
         
-        # 转换结果为字典列表
+        # Convert + apply in-memory filters for salary/type
         result = []
+        min_k_num = None
+        max_k_num = None
+        try:
+            if min_k is not None and str(min_k).strip() != "":
+                min_k_num = float(min_k)
+        except Exception:
+            min_k_num = None
+        try:
+            if max_k is not None and str(max_k).strip() != "":
+                max_k_num = float(max_k)
+        except Exception:
+            max_k_num = None
+
+        selected_types = [t.strip() for t in (job_types or []) if t and str(t).strip()]
         for row in rows:
-            result.append(dict(row))
+            job = dict(row)
+
+            if selected_types and (not _match_job_type(job, selected_types)):
+                continue
+
+            if min_k_num is not None or max_k_num is not None:
+                low, high = _extract_salary_k_range(job.get("salary_range"))
+                if low is None and high is None:
+                    continue
+                if min_k_num is not None and high is not None and high < min_k_num:
+                    continue
+                if max_k_num is not None and low is not None and low > max_k_num:
+                    continue
+
+            result.append(job)
             
         return result
     except Exception as e:
