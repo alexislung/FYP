@@ -212,19 +212,19 @@ async function generateCoverLetterFromWizard() {
 async function saveCoverLetterToAccount() {
   try {
     const client = window.getEasyjobSupabase && window.getEasyjobSupabase();
-    if (!client) throw new Error('Supabase 未初始化（請檢查 supabase-config.js）');
+    if (!client) throw new Error('Supabase is not initialized (check supabase-config.js).');
 
     const { data: sessionData } = await client.auth.getSession();
     const session = sessionData && sessionData.session;
     if (!session) {
-      alert('請先登入先可以保存。');
+      alert('Please sign in to save.');
       window.location.href = 'login.html';
       return;
     }
 
     const contentEl = document.getElementById('coverLetterContent');
     const text = contentEl ? (contentEl.textContent || '').trim() : '';
-    if (!text || text.length < 20) throw new Error('未有 Cover Letter 內容可保存，請先 Generate。');
+    if (!text || text.length < 20) throw new Error('No cover letter content to save. Please generate it first.');
 
     const position = (document.getElementById('position') && document.getElementById('position').value) || 'Position';
     const company = (document.getElementById('companyName') && document.getElementById('companyName').value) || 'Company';
@@ -240,11 +240,11 @@ async function saveCoverLetterToAccount() {
     const { error } = await client.from('cover_letters').insert(payload);
     if (error) throw error;
 
-    alert('已保存到 Account！');
+    alert('Saved to your account!');
     window.location.href = 'account.html';
   } catch (e) {
     console.error(e);
-    alert('保存失敗：' + (e && e.message ? e.message : '未知錯誤'));
+    alert('Save failed: ' + (e && e.message ? e.message : 'Unknown error'));
   }
 }
 

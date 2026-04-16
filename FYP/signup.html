@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>註冊 - Easy Job</title>
+  <title>Sign Up - Easy Job</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
@@ -42,13 +42,13 @@
     </div>
   </nav>
 
-  <!-- 注册表单主体 -->
+  <!-- Sign up form -->
   <main class="site-main flex-1 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl p-8 md:p-12">
 
       <div class="flex flex-col md:flex-row items-center gap-10">
         
-        <!-- 左侧表单 -->
+        <!-- Form -->
         <div class="flex-1 w-full">
           <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Create an account</h2>
           <p class="text-sm text-gray-600 mb-8">
@@ -86,7 +86,7 @@
               <span class="text-sm text-gray-700">Show password</span>
             </label>
 
-            <!-- 提交按钮 -->
+            <!-- Submit -->
             <div class="pt-6 flex flex-col items-center gap-4">
               <a href="login.html" class="text-sm text-gray-600 hover:underline">Log in instead</a>
               <button type="submit"
@@ -98,7 +98,7 @@
           </form>
         </div>
 
-        <!-- 右侧大 Logo -->
+        <!-- Right-side logo -->
         <div class="hidden md:block">
           <div class="relative">
             <span class="text-9xl font-black text-gray-900 tracking-tighter">EASY</span>
@@ -129,7 +129,7 @@
     </div>
   </footer>
 
-  <!-- 简单 JS：显示/隐藏密码 -->
+  <!-- Simple JS: show/hide password -->
   <script>
     // ===== Supabase setup (fill these in) =====
     // From Supabase Dashboard -> Project Settings -> API
@@ -143,7 +143,7 @@
       });
     }
 
-    // 註冊：使用 Supabase Auth（不要把密碼存進資料表）
+    // Sign up via Supabase Auth (do NOT store passwords in your own tables)
     document.getElementById('signupForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
@@ -154,19 +154,19 @@
       const confirmPassword = document.getElementById('confirmPassword').value;
 
       if (password !== confirmPassword) {
-        alert('密碼與確認密碼不一致。');
+        alert('Passwords do not match.');
         return;
       }
 
       if (!supabaseClient) {
-        alert('Supabase 未初始化（請檢查 `supabase-config.js`）。');
+        alert('Supabase is not initialized (check supabase-config.js).');
         return;
       }
 
       const btn = document.getElementById('signupSubmitBtn');
       const originalText = btn.textContent;
       btn.disabled = true;
-      btn.textContent = '註冊中...';
+      btn.textContent = 'Creating account...';
 
       try {
         const { data, error } = await supabaseClient.auth.signUp({
@@ -199,11 +199,11 @@
         try {
           localStorage.setItem('easyjob_name', (firstName + ' ' + lastName).trim() || email);
         } catch (_) {}
-        alert('註冊成功！如有啟用 Email 驗證，請先到信箱完成驗證。');
+        alert('Sign up successful! If email confirmation is enabled, please verify via your inbox first.');
         window.location.href = 'login.html';
       } catch (err) {
         console.error(err);
-        alert('註冊失敗：' + (err?.message || '未知錯誤'));
+        alert('Sign up failed: ' + (err?.message || 'Unknown error'));
       } finally {
         btn.disabled = false;
         btn.textContent = originalText;

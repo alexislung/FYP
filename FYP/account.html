@@ -44,12 +44,12 @@
     <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
       <div>
         <p class="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-600">Account</p>
-        <h1 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight text-neutral-950">你的保存內容</h1>
-        <p class="mt-2 text-sm text-neutral-500">在呢度查看你保存過嘅 CV 同 Cover Letter。</p>
+        <h1 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight text-neutral-950">Your saved content</h1>
+        <p class="mt-2 text-sm text-neutral-500">View the CVs and cover letters you saved.</p>
       </div>
       <div class="flex gap-2">
-        <a href="cv-template.html" class="inline-flex items-center justify-center rounded-full border border-neutral-200 bg-white px-5 py-2.5 text-sm font-semibold text-neutral-800 hover:bg-neutral-50 transition">去做 CV</a>
-        <a href="cover-letter.html" class="inline-flex items-center justify-center rounded-full bg-cyan-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-cyan-700 transition">去做 Cover Letter</a>
+        <a href="cv-template.html" class="inline-flex items-center justify-center rounded-full border border-neutral-200 bg-white px-5 py-2.5 text-sm font-semibold text-neutral-800 hover:bg-neutral-50 transition">Create a CV</a>
+        <a href="cover-letter.html" class="inline-flex items-center justify-center rounded-full bg-cyan-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-cyan-700 transition">Create a cover letter</a>
       </div>
     </div>
 
@@ -57,20 +57,20 @@
       <section class="rounded-2xl border border-neutral-200 bg-white shadow-sm">
         <div class="p-6 border-b border-neutral-200">
           <h2 class="text-lg font-bold">Saved CV</h2>
-          <p class="text-sm text-neutral-500 mt-1">你生成並保存過嘅履歷。</p>
+          <p class="text-sm text-neutral-500 mt-1">CVs you generated and saved.</p>
         </div>
         <div id="cvList" class="p-6 space-y-4">
-          <div class="text-sm text-neutral-500">載入中...</div>
+          <div class="text-sm text-neutral-500">Loading...</div>
         </div>
       </section>
 
       <section class="rounded-2xl border border-neutral-200 bg-white shadow-sm">
         <div class="p-6 border-b border-neutral-200">
           <h2 class="text-lg font-bold">Saved Cover Letters</h2>
-          <p class="text-sm text-neutral-500 mt-1">你生成並保存過嘅求職信。</p>
+          <p class="text-sm text-neutral-500 mt-1">Cover letters you generated and saved.</p>
         </div>
         <div id="clList" class="p-6 space-y-4">
-          <div class="text-sm text-neutral-500">載入中...</div>
+          <div class="text-sm text-neutral-500">Loading...</div>
         </div>
       </section>
     </div>
@@ -140,7 +140,7 @@
         copyBtn.textContent = 'Copied';
         setTimeout(() => (copyBtn.textContent = 'Copy'), 900);
       } catch (_) {
-        alert('複製失敗，請手動選取複製。');
+        alert('Copy failed. Please select and copy manually.');
       }
     });
 
@@ -183,7 +183,7 @@
     async function loadAccountData() {
       const client = window.getEasyjobSupabase && window.getEasyjobSupabase();
       if (!client) {
-        alert('Supabase 未初始化（請檢查 `supabase-config.js`）。');
+        alert('Supabase is not initialized (check supabase-config.js).');
         return;
       }
 
@@ -200,9 +200,9 @@
         .order('created_at', { ascending: false })
         .limit(20);
       if (cvRes.error) {
-        renderEmpty(cvList, '讀取 CV 失敗：' + cvRes.error.message);
+        renderEmpty(cvList, 'Failed to load CVs: ' + cvRes.error.message);
       } else if (!cvRes.data || cvRes.data.length === 0) {
-        renderEmpty(cvList, '你未保存過 CV。');
+        renderEmpty(cvList, 'You have not saved any CVs yet.');
       } else {
         cvList.innerHTML = cvRes.data.map((r) => renderListItem('cv', r)).join('');
       }
@@ -214,9 +214,9 @@
         .order('created_at', { ascending: false })
         .limit(20);
       if (clRes.error) {
-        renderEmpty(clList, '讀取 Cover Letter 失敗：' + clRes.error.message);
+        renderEmpty(clList, 'Failed to load cover letters: ' + clRes.error.message);
       } else if (!clRes.data || clRes.data.length === 0) {
-        renderEmpty(clList, '你未保存過 Cover Letter。');
+        renderEmpty(clList, 'You have not saved any cover letters yet.');
       } else {
         clList.innerHTML = clRes.data.map((r) => renderListItem('cl', r)).join('');
       }

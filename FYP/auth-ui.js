@@ -48,14 +48,19 @@
     var el = document.getElementById('authLink');
     if (!el) return;
     if (name) {
-      el.textContent = 'Hi, ' + name;
+      el.textContent = 'Hi ' + name;
       el.href = 'account.html';
       el.classList.remove('hover:text-cyan-600');
       el.classList.add('text-cyan-700');
+      el.classList.add('no-underline');
+      el.style.background = 'transparent';
+      el.style.boxShadow = 'none';
+      el.style.outline = 'none';
       ensureLogoutButton(el);
     } else {
       el.textContent = 'Login';
       el.href = 'login.html';
+      el.classList.add('no-underline');
       var logout = document.getElementById('authLogoutBtn');
       if (logout) logout.remove();
     }

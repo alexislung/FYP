@@ -159,20 +159,20 @@
       const password = document.getElementById('loginPassword').value;
 
       if (!supabaseClient) {
-        alert('Supabase 未初始化（請檢查 `supabase-config.js`）。');
+        alert('Supabase is not initialized (check supabase-config.js).');
         return;
       }
 
       const btn = document.getElementById('loginSubmitBtn');
       const originalText = btn.textContent;
       btn.disabled = true;
-      btn.textContent = '登入中...';
+      btn.textContent = 'Signing in...';
 
       try {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
         if (error) throw error;
         if (!data?.session) {
-          alert('登入未完成：未取得 session（可能需要先完成 Email 驗證）。');
+          alert('Sign-in not completed: no session returned (you may need to confirm your email first).');
           return;
         }
         try {
@@ -183,11 +183,11 @@
           const name = (first + ' ' + last).trim() || (user?.email || email);
           localStorage.setItem('easyjob_name', name);
         } catch (_) {}
-        alert('登入成功！');
+        alert('Signed in!');
         window.location.href = 'index.html';
       } catch (err) {
         console.error(err);
-        alert('登入失敗：' + (err?.message || '未知錯誤'));
+        alert('Sign-in failed: ' + (err?.message || 'Unknown error'));
       } finally {
         btn.disabled = false;
         btn.textContent = originalText;

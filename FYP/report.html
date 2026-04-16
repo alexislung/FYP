@@ -405,7 +405,7 @@
           if (fullHeight < 100 || fullWidth < 100) {
             restoreBtn();
             console.warn('PDF: element size too small', fullWidth, fullHeight);
-            alert('無法擷取報告區域，請稍後再試或使用「Print Report」。');
+            alert('Unable to capture the report area. Please try again later or use "Print Report".');
             return;
           }
           // Force single-page PDF: scale content so entire report fits on one A4 page (like view report)
@@ -439,7 +439,7 @@
             if (!blob || blob.size < 100) {
               restoreBtn();
               console.error('PDF: generated blob empty or too small', blob ? blob.size : 0);
-              alert('產生的 PDF 無效，請使用「Print Report」或稍後再試。');
+              alert('The generated PDF is invalid. Please use "Print Report" or try again later.');
               return;
             }
             var url = URL.createObjectURL(blob);
@@ -454,7 +454,7 @@
           }).catch(function (err) {
             restoreBtn();
             console.error('PDF error:', err);
-            alert('無法產生 PDF：' + (err && err.message ? err.message : '請使用「Print Report」或稍後再試。'));
+            alert('Failed to generate PDF: ' + (err && err.message ? err.message : 'Please use "Print Report" or try again later.'));
           });
         });
       }, 150);

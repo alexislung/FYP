@@ -628,19 +628,19 @@ async function saveCVToAccount() {
 
   try {
     const client = window.getEasyjobSupabase && window.getEasyjobSupabase();
-    if (!client) throw new Error('Supabase 未初始化（請檢查 supabase-config.js）');
+    if (!client) throw new Error('Supabase is not initialized (check supabase-config.js).');
 
     const { data: sessionData } = await client.auth.getSession();
     const session = sessionData && sessionData.session;
     if (!session) {
-      alert('請先登入先可以保存。');
+      alert('Please sign in to save.');
       window.location.href = 'login.html';
       return;
     }
 
     const cvContent = document.getElementById('cvContent');
     const html = cvContent ? cvContent.innerHTML : '';
-    if (!html || html.trim().length < 20) throw new Error('未有 CV 內容可保存，請先 Generate CV。');
+    if (!html || html.trim().length < 20) throw new Error('No CV content to save. Please generate your CV first.');
 
     const draft = getDraftData();
     const title = (draft && draft.jobTitle)
@@ -658,11 +658,11 @@ async function saveCVToAccount() {
     const { error } = await client.from('cv_documents').insert(payload);
     if (error) throw error;
 
-    alert('已保存到 Account！');
+    alert('Saved to your account!');
     window.location.href = 'account.html';
   } catch (e) {
     console.error(e);
-    alert('保存失敗：' + (e && e.message ? e.message : '未知錯誤'));
+    alert('Save failed: ' + (e && e.message ? e.message : 'Unknown error'));
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = originalText; }
   }
@@ -672,24 +672,24 @@ function downloadCVPDF() {
   const cvContent = document.getElementById('cvContent');
   const templateEl = cvContent && cvContent.querySelector('.cv-template');
   if (!templateEl) {
-    alert('請先點擊「Generate CV」產生履歷後再下載 PDF。');
+    alert('Please generate your CV first before downloading as PDF.');
     return;
   }
   var textLen = (templateEl.textContent || '').trim().length;
   if (textLen === 0) {
     console.warn('downloadCVPDF: template content is empty');
-    alert('履歷內容為空，請先填寫並產生 CV 後再下載。');
+    alert('Your CV content is empty. Please generate your CV first.');
     return;
   }
   if (!window.html2pdf) {
-    alert('PDF 程式庫未載入，請檢查網路連線後重新整理頁面。');
+    alert('PDF library not loaded. Please check your connection and refresh.');
     return;
   }
   const btn = document.querySelector('button[onclick="downloadCVPDF()"]');
   const originalText = btn ? btn.textContent : '';
   if (btn) {
     btn.disabled = true;
-    btn.textContent = '正在產生 PDF...';
+    btn.textContent = 'Generating PDF...';
   }
   const firstName = (document.querySelector('[data-key="firstName"]') && document.querySelector('[data-key="firstName"]').value) || 'My';
   const filename = (firstName.replace(/[^\w\s-]/g, '') || 'CV').trim() + '_CV.pdf';
@@ -723,7 +723,7 @@ function downloadCVPDF() {
         if (!blob || blob.size === 0) {
           restoreBtn();
           console.error('downloadCVPDF: generated PDF blob is empty');
-          alert('產生的 PDF 為空，請稍後再試或換一個瀏覽器。');
+          alert('Generated PDF is empty. Please try again or use another browser.');
           return;
         }
         var url = URL.createObjectURL(blob);
@@ -739,7 +739,7 @@ function downloadCVPDF() {
       }).catch(function (err) {
         restoreBtn();
         console.error('PDF generation failed:', err);
-        alert('無法產生 PDF：' + (err && err.message ? err.message : '請稍後再試或換一個瀏覽器。'));
+        alert('Failed to generate PDF: ' + (err && err.message ? err.message : 'Please try again or use another browser.'));
       });
     });
   });

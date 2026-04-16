@@ -42,7 +42,7 @@
     </div>
   </nav>
 
-  <!-- 主体内容 -->
+  <!-- Main content -->
   <main class="site-main flex-1 container mx-auto px-6 py-12 max-w-4xl">
     
     <a href="job-search.html" class="back-btn">
@@ -53,10 +53,10 @@
     <div id="loading" class="text-center py-20 text-xl text-gray-500">Loading job details...</div>
     <div id="error" class="hidden text-center py-20 text-xl text-red-500">Job not found.</div>
 
-    <!-- 职位详情卡片 -->
+    <!-- Job details card -->
     <div id="job-content" class="hidden bg-white rounded-3xl shadow-xl border-4 border-black overflow-hidden">
       
-      <!-- 头部 Banner -->
+      <!-- Header banner -->
       <div class="bg-cyan-50 p-10 border-b-2 border-gray-100">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
@@ -78,7 +78,7 @@
         </div>
       </div>
 
-      <!-- 详情内容 -->
+      <!-- Details content -->
       <div class="p-10">
         <h3 class="text-2xl font-bold mb-6 flex items-center gap-2">
           <svg class="w-6 h-6 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -142,7 +142,7 @@
   </div>
 
   <script>
-    // --- 页面逻辑 ---
+    // --- Page logic ---
     document.addEventListener('DOMContentLoaded', async () => {
       const params = new URLSearchParams(window.location.search);
       const jobId = params.get('id');
@@ -172,7 +172,7 @@
       document.getElementById('job-salary').textContent = job.salary_range || 'Negotiable';
       document.getElementById('job-category').textContent = job.category || 'General';
       
-      // ✅ 修复后的安全写法
+      // Safe assignment
       document.getElementById('job-location-text').textContent = job.location || 'Hong Kong';
       
       document.getElementById('job-requirements').textContent = job.requirements || 'No specific requirements listed.';
@@ -183,7 +183,7 @@
       document.getElementById('error').classList.remove('hidden');
     }
 
-    // --- 模态框逻辑 ---
+    // --- Modal logic ---
     const modal = document.getElementById('apply-modal');
 
     function openModal() {
@@ -199,7 +199,7 @@
         if (e.target === modal) closeModal();
     });
 
-    // --- 申请表单逻辑 ---
+    // --- Apply form logic ---
     document.getElementById('apply-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = e.target.querySelector('button[type="submit"]');
