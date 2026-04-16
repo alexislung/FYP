@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-HK" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Account - Easy Job</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <link href="common.css" rel="stylesheet">
+  <script src="supabase-config.js"></script>
+</head>
+<body class="bg-[#fafafa] text-neutral-900 antialiased min-h-screen flex flex-col">
+
+  <!-- Navigation (aligned to index.html) -->
+  <nav class="sticky top-0 z-30 border-b border-neutral-200/90 bg-white/90 backdrop-blur-md">
+    <div class="container mx-auto px-4 md:px-6 py-3.5 flex flex-col lg:flex-row items-center justify-between gap-4">
+      <a href="index.html" class="flex items-baseline gap-1.5 font-bold tracking-tight">
+        <span class="text-2xl text-cyan-600">EASY</span><span class="text-lg font-semibold text-neutral-900">Easy Job</span>
+      </a>
+      <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm font-medium text-neutral-600">
+        <a href="index.html" class="hover:text-cyan-600 transition">Home</a>
+        <a href="quiz.html" class="hover:text-cyan-600 transition">JOB Quiz</a>
+        <a href="job-search.html" class="hover:text-cyan-600 transition">JOB Search</a>
+        <a href="cv-template.html" class="hover:text-cyan-600 transition">CV Template</a>
+        <a href="coach.html" class="hover:text-cyan-600 transition">Interview Coach</a>
+      </div>
+      <div class="flex w-full lg:w-auto items-center gap-3 justify-center lg:justify-end">
+        <div class="relative flex-1 min-w-0 lg:w-56">
+          <input type="text" placeholder="Search" aria-label="Search"
+                 class="w-full rounded-full border border-neutral-200 bg-neutral-50 py-2.5 pl-4 pr-10 text-sm text-neutral-800 placeholder:text-neutral-400 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20">
+          <button type="button" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-cyan-600" aria-label="Submit search">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </button>
+        </div>
+        <a href="login.html" id="authLink" class="shrink-0 text-sm font-medium text-neutral-600 hover:text-cyan-600 transition">Login</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="site-main flex-1 container mx-auto px-4 md:px-6 py-10 max-w-6xl">
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-600">Account</p>
+        <h1 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight text-neutral-950">你的保存內容</h1>
+        <p class="mt-2 text-sm text-neutral-500">在呢度查看你保存過嘅 CV 同 Cover Letter。</p>
+      </div>
+      <div class="flex gap-2">
+        <a href="cv-template.html" class="inline-flex items-center justify-center rounded-full border border-neutral-200 bg-white px-5 py-2.5 text-sm font-semibold text-neutral-800 hover:bg-neutral-50 transition">去做 CV</a>
+        <a href="cover-letter.html" class="inline-flex items-center justify-center rounded-full bg-cyan-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-cyan-700 transition">去做 Cover Letter</a>
+      </div>
+    </div>
+
+    <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <section class="rounded-2xl border border-neutral-200 bg-white shadow-sm">
+        <div class="p-6 border-b border-neutral-200">
+          <h2 class="text-lg font-bold">Saved CV</h2>
+          <p class="text-sm text-neutral-500 mt-1">你生成並保存過嘅履歷。</p>
+        </div>
+        <div id="cvList" class="p-6 space-y-4">
+          <div class="text-sm text-neutral-500">載入中...</div>
+        </div>
+      </section>
+
+      <section class="rounded-2xl border border-neutral-200 bg-white shadow-sm">
+        <div class="p-6 border-b border-neutral-200">
+          <h2 class="text-lg font-bold">Saved Cover Letters</h2>
+          <p class="text-sm text-neutral-500 mt-1">你生成並保存過嘅求職信。</p>
+        </div>
+        <div id="clList" class="p-6 space-y-4">
+          <div class="text-sm text-neutral-500">載入中...</div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Viewer Modal -->
+  <div id="viewerModal" class="fixed inset-0 hidden items-center justify-center bg-black/60 p-4 z-50">
+    <div class="w-full max-w-4xl max-h-[85vh] overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div class="flex items-center justify-between gap-3 p-4 border-b border-neutral-200">
+        <div>
+          <p id="viewerMeta" class="text-xs text-neutral-500"></p>
+          <h3 id="viewerTitle" class="text-base font-bold text-neutral-900">Preview</h3>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="viewerCopyBtn" type="button" class="rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm font-semibold hover:bg-neutral-50">Copy</button>
+          <button id="viewerCloseBtn" type="button" class="rounded-full bg-neutral-900 text-white px-4 py-2 text-sm font-semibold hover:bg-neutral-800">Close</button>
+        </div>
+      </div>
+      <div id="viewerBody" class="p-5 overflow-auto max-h-[calc(85vh-64px)] bg-neutral-50"></div>
+    </div>
+  </div>
+
+  <footer class="bg-neutral-950 text-neutral-400 py-12 md:py-14 mt-0">
+    <div class="container mx-auto px-4 md:px-6 text-center text-sm">
+      <p class="font-medium text-neutral-500">© 2025 Easy Job. All rights reserved.</p>
+      <div class="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2 text-neutral-500">
+        <a href="job-search.html" class="hover:text-white transition">JOB Search</a>
+        <a href="quiz.html" class="hover:text-white transition">JOB Quiz</a>
+        <a href="cv-template.html" class="hover:text-white transition">CV Template</a>
+        <a href="coach.html" class="hover:text-white transition">Interview Coach</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="auth-ui.js"></script>
+  <script>
+    const modal = document.getElementById('viewerModal');
+    const viewerBody = document.getElementById('viewerBody');
+    const viewerTitle = document.getElementById('viewerTitle');
+    const viewerMeta = document.getElementById('viewerMeta');
+    const copyBtn = document.getElementById('viewerCopyBtn');
+    const closeBtn = document.getElementById('viewerCloseBtn');
+    let lastCopyText = '';
+
+    function openViewer(opts) {
+      viewerTitle.textContent = opts.title || 'Preview';
+      viewerMeta.textContent = opts.meta || '';
+      lastCopyText = opts.copyText || '';
+      viewerBody.innerHTML = opts.html || '';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeViewer() {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      viewerBody.innerHTML = '';
+      lastCopyText = '';
+    }
+
+    closeBtn.addEventListener('click', closeViewer);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeViewer(); });
+    copyBtn.addEventListener('click', async () => {
+      if (!lastCopyText) return;
+      try {
+        await navigator.clipboard.writeText(lastCopyText);
+        copyBtn.textContent = 'Copied';
+        setTimeout(() => (copyBtn.textContent = 'Copy'), 900);
+      } catch (_) {
+        alert('複製失敗，請手動選取複製。');
+      }
+    });
+
+    function fmtDate(iso) {
+      try { return new Date(iso).toLocaleString(); } catch (_) { return iso || ''; }
+    }
+
+    function renderEmpty(el, text) {
+      el.innerHTML = '<div class="text-sm text-neutral-500">' + text + '</div>';
+    }
+
+    function renderListItem(kind, row) {
+      const title = row.title || (kind === 'cv' ? 'CV' : 'Cover Letter');
+      const when = fmtDate(row.created_at);
+      const id = row.id;
+      return `
+        <div class="rounded-xl border border-neutral-200 bg-white p-4 hover:border-cyan-200 transition">
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0">
+              <div class="font-semibold text-neutral-900 truncate">${title}</div>
+              <div class="text-xs text-neutral-500 mt-1">${when}</div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button type="button" data-kind="${kind}" data-id="${id}" class="view-btn rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs font-semibold hover:bg-neutral-50">View</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function requireSession(client) {
+      const { data } = await client.auth.getSession();
+      if (!data || !data.session) {
+        window.location.href = 'login.html';
+        return null;
+      }
+      return data.session;
+    }
+
+    async function loadAccountData() {
+      const client = window.getEasyjobSupabase && window.getEasyjobSupabase();
+      if (!client) {
+        alert('Supabase 未初始化（請檢查 `supabase-config.js`）。');
+        return;
+      }
+
+      const session = await requireSession(client);
+      if (!session) return;
+
+      const cvList = document.getElementById('cvList');
+      const clList = document.getElementById('clList');
+
+      // CV
+      const cvRes = await client
+        .from('cv_documents')
+        .select('id, title, created_at, content_html')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (cvRes.error) {
+        renderEmpty(cvList, '讀取 CV 失敗：' + cvRes.error.message);
+      } else if (!cvRes.data || cvRes.data.length === 0) {
+        renderEmpty(cvList, '你未保存過 CV。');
+      } else {
+        cvList.innerHTML = cvRes.data.map((r) => renderListItem('cv', r)).join('');
+      }
+
+      // Cover letters
+      const clRes = await client
+        .from('cover_letters')
+        .select('id, title, created_at, content_text')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (clRes.error) {
+        renderEmpty(clList, '讀取 Cover Letter 失敗：' + clRes.error.message);
+      } else if (!clRes.data || clRes.data.length === 0) {
+        renderEmpty(clList, '你未保存過 Cover Letter。');
+      } else {
+        clList.innerHTML = clRes.data.map((r) => renderListItem('cl', r)).join('');
+      }
+
+      document.querySelectorAll('.view-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const kind = btn.getAttribute('data-kind');
+          const id = btn.getAttribute('data-id');
+          if (!kind || !id) return;
+
+          if (kind === 'cv') {
+            const one = await client.from('cv_documents').select('title, created_at, content_html').eq('id', id).single();
+            if (one.error) return alert(one.error.message);
+            openViewer({
+              title: one.data.title || 'CV',
+              meta: fmtDate(one.data.created_at),
+              html: '<div class="rounded-xl border border-neutral-200 bg-white p-4 overflow-auto">' + (one.data.content_html || '') + '</div>',
+              copyText: one.data.content_html || ''
+            });
+          } else {
+            const one = await client.from('cover_letters').select('title, created_at, content_text').eq('id', id).single();
+            if (one.error) return alert(one.error.message);
+            const text = one.data.content_text || '';
+            openViewer({
+              title: one.data.title || 'Cover Letter',
+              meta: fmtDate(one.data.created_at),
+              html: '<pre class="whitespace-pre-wrap text-sm text-neutral-800 leading-relaxed rounded-xl border border-neutral-200 bg-white p-4">' + (text.replace(/</g,'&lt;').replace(/>/g,'&gt;')) + '</pre>',
+              copyText: text
+            });
+          }
+        });
+      });
+    }
+
+    loadAccountData();
+  </script>
+</body>
+</html>
+

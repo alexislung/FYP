@@ -608,6 +608,8 @@ function generateCV() {
     document.getElementById('cvLoadingText').classList.add('hidden');
     document.getElementById('cvResult').classList.remove('hidden');
     document.getElementById('cvContent').innerHTML = html;
+    var saveBtn = document.getElementById('saveCvBtn');
+    if (saveBtn) saveBtn.disabled = false;
   }
   const photoInput = document.getElementById('photoInput');
   if (photoInput && photoInput.files && photoInput.files[0]) {
@@ -616,6 +618,53 @@ function generateCV() {
     reader.readAsDataURL(photoInput.files[0]);
   } else {
     finishCV(null);
+  }
+}
+
+async function saveCVToAccount() {
+  const btn = document.getElementById('saveCvBtn');
+  const originalText = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+
+  try {
+    const client = window.getEasyjobSupabase && window.getEasyjobSupabase();
+    if (!client) throw new Error('Supabase 未初始化（請檢查 supabase-config.js）');
+
+    const { data: sessionData } = await client.auth.getSession();
+    const session = sessionData && sessionData.session;
+    if (!session) {
+      alert('請先登入先可以保存。');
+      window.location.href = 'login.html';
+      return;
+    }
+
+    const cvContent = document.getElementById('cvContent');
+    const html = cvContent ? cvContent.innerHTML : '';
+    if (!html || html.trim().length < 20) throw new Error('未有 CV 內容可保存，請先 Generate CV。');
+
+    const draft = getDraftData();
+    const title = (draft && draft.jobTitle)
+      ? (draft.jobTitle + ' - ' + (draft.firstName || '') + ' ' + (draft.lastName || '')).trim()
+      : ('CV - ' + new Date().toISOString().slice(0, 10));
+
+    const payload = {
+      user_id: session.user.id,
+      title: title,
+      template: (draft && draft.template) ? String(draft.template) : (tmplFromUrl || ''),
+      content_html: html,
+      draft_json: draft
+    };
+
+    const { error } = await client.from('cv_documents').insert(payload);
+    if (error) throw error;
+
+    alert('已保存到 Account！');
+    window.location.href = 'account.html';
+  } catch (e) {
+    console.error(e);
+    alert('保存失敗：' + (e && e.message ? e.message : '未知錯誤'));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = originalText; }
   }
 }
 

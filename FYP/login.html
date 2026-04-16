@@ -7,6 +7,7 @@
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link href="common.css" rel="stylesheet">
   <style>
@@ -39,7 +40,7 @@
             </svg>
           </button>
         </div>
-        <a href="login.html" class="shrink-0 text-sm font-medium text-cyan-700 hover:text-cyan-600 transition">Login</a>
+        <a href="login.html" id="authLink" class="shrink-0 text-sm font-medium text-cyan-700 hover:text-cyan-600 transition">Login</a>
       </div>
     </div>
   </nav>
@@ -135,13 +136,7 @@
 
   <!-- Simple JS -->
   <script>
-    // ===== Supabase setup (fill these in) =====
-    // From Supabase Dashboard -> Project Settings -> API
-    const SUPABASE_URL = 'https://ylpzdegpjbkrhfbqcbvc.supabase.co'; // e.g. https://xxxx.supabase.co
-    const SUPABASE_ANON_KEY = 'sb_publishable_otHMsDv-KIy08iRvQmS3rQ_5kf1GmSL'; // anon public key
-    const supabaseClient = (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase)
-      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-      : null;
+    const supabaseClient = window.getEasyjobSupabase && window.getEasyjobSupabase();
 
     // Toggle password visibility
     function togglePassword(btn) {
@@ -164,7 +159,7 @@
       const password = document.getElementById('loginPassword').value;
 
       if (!supabaseClient) {
-        alert('尚未設定 Supabase。請在 login.html 填入 SUPABASE_URL 與 SUPABASE_ANON_KEY。');
+        alert('Supabase 未初始化（請檢查 `supabase-config.js`）。');
         return;
       }
 
@@ -180,6 +175,14 @@
           alert('登入未完成：未取得 session（可能需要先完成 Email 驗證）。');
           return;
         }
+        try {
+          const user = data?.user;
+          const meta = user?.user_metadata || {};
+          const first = (meta.first_name || meta.firstName || '').trim();
+          const last = (meta.last_name || meta.lastName || '').trim();
+          const name = (first + ' ' + last).trim() || (user?.email || email);
+          localStorage.setItem('easyjob_name', name);
+        } catch (_) {}
         alert('登入成功！');
         window.location.href = 'index.html';
       } catch (err) {
@@ -191,6 +194,7 @@
       }
     });
   </script>
+  <script src="auth-ui.js"></script>
 
 </body>
 </html>

@@ -6,6 +6,7 @@
   <title>註冊 - Easy Job</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="common.css" rel="stylesheet">
   <style>
@@ -36,7 +37,7 @@
             </svg>
           </button>
         </div>
-        <a href="login.html" class="shrink-0 text-sm font-medium text-neutral-600 hover:text-cyan-600 transition">Login</a>
+        <a href="login.html" id="authLink" class="shrink-0 text-sm font-medium text-neutral-600 hover:text-cyan-600 transition">Login</a>
       </div>
     </div>
   </nav>
@@ -132,11 +133,7 @@
   <script>
     // ===== Supabase setup (fill these in) =====
     // From Supabase Dashboard -> Project Settings -> API
-    const SUPABASE_URL = 'https://ylpzdegpjbkrhfbqcbvc.supabase.co'; // e.g. https://xxxx.supabase.co
-    const SUPABASE_ANON_KEY = 'sb_publishable_otHMsDv-KIy08iRvQmS3rQ_5kf1GmSL'; // anon public key
-    const supabaseClient = (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase)
-      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-      : null;
+    const supabaseClient = window.getEasyjobSupabase && window.getEasyjobSupabase();
 
     function togglePassword() {
       const pwd = document.getElementById('password');
@@ -162,7 +159,7 @@
       }
 
       if (!supabaseClient) {
-        alert('尚未設定 Supabase。請在 signup.html 填入 SUPABASE_URL 與 SUPABASE_ANON_KEY。');
+        alert('Supabase 未初始化（請檢查 `supabase-config.js`）。');
         return;
       }
 
@@ -199,6 +196,9 @@
         }
 
         // If email confirmation is enabled, user may need to verify email before login
+        try {
+          localStorage.setItem('easyjob_name', (firstName + ' ' + lastName).trim() || email);
+        } catch (_) {}
         alert('註冊成功！如有啟用 Email 驗證，請先到信箱完成驗證。');
         window.location.href = 'login.html';
       } catch (err) {
@@ -210,5 +210,6 @@
       }
     });
   </script>
+  <script src="auth-ui.js"></script>
 </body>
 </html>

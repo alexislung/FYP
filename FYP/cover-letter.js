@@ -209,6 +209,45 @@ async function generateCoverLetterFromWizard() {
   }
 }
 
+async function saveCoverLetterToAccount() {
+  try {
+    const client = window.getEasyjobSupabase && window.getEasyjobSupabase();
+    if (!client) throw new Error('Supabase 未初始化（請檢查 supabase-config.js）');
+
+    const { data: sessionData } = await client.auth.getSession();
+    const session = sessionData && sessionData.session;
+    if (!session) {
+      alert('請先登入先可以保存。');
+      window.location.href = 'login.html';
+      return;
+    }
+
+    const contentEl = document.getElementById('coverLetterContent');
+    const text = contentEl ? (contentEl.textContent || '').trim() : '';
+    if (!text || text.length < 20) throw new Error('未有 Cover Letter 內容可保存，請先 Generate。');
+
+    const position = (document.getElementById('position') && document.getElementById('position').value) || 'Position';
+    const company = (document.getElementById('companyName') && document.getElementById('companyName').value) || 'Company';
+    const title = (position + ' - ' + company + ' Cover Letter').trim();
+
+    const payload = {
+      user_id: session.user.id,
+      title: title,
+      content_text: text,
+      wizard_json: coverLetterData
+    };
+
+    const { error } = await client.from('cover_letters').insert(payload);
+    if (error) throw error;
+
+    alert('已保存到 Account！');
+    window.location.href = 'account.html';
+  } catch (e) {
+    console.error(e);
+    alert('保存失敗：' + (e && e.message ? e.message : '未知錯誤'));
+  }
+}
+
 function copyCoverLetter() {
   var contentEl = document.getElementById('coverLetterContent');
   var content = contentEl ? contentEl.textContent : '';
