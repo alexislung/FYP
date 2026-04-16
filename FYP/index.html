@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-HK" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Easy Job – Job Quiz & CV Builder</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .gradient-bg { background: linear-gradient(135deg, #e0f7fa 0%, #fff 100%); }
+    .card-shadow { box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
+    .job-quiz-slide {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+    }
+    .job-quiz-slide.is-active { opacity: 1; }
+    .cv-showcase-bg {
+      background-color: #0891b2;
+      background-image:
+        linear-gradient(135deg, rgba(6, 182, 212, 0.95) 0%, rgba(8, 145, 178, 0.98) 45%, rgba(14, 116, 144, 1) 100%),
+        repeating-linear-gradient(
+          -36deg,
+          rgba(255, 255, 255, 0) 0,
+          rgba(255, 255, 255, 0) 10px,
+          rgba(255, 255, 255, 0.06) 10px,
+          rgba(255, 255, 255, 0.06) 20px
+        );
+    }
+    #cv-carousel-track {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.4) transparent;
+    }
+    #cv-carousel-track::-webkit-scrollbar {
+      height: 6px;
+    }
+    #cv-carousel-track::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.35);
+      border-radius: 999px;
+    }
+    .reveal {
+      opacity: 0;
+      transform: translateY(1.25rem);
+      transition:
+        opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    @keyframes float-gentle-y {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+    .float-gentle {
+      display: inline-block;
+      animation: float-gentle-y 5s ease-in-out infinite;
+    }
+    .float-gentle-card {
+      animation: float-gentle-y 5.5s ease-in-out infinite;
+    }
+    .float-gentle-card--b { animation-delay: -1.83s; }
+    .float-gentle-card--c { animation-delay: -3.67s; }
+    .job-showcase-glow {
+      background: linear-gradient(125deg, #ede9fe 0%, #e0e7ff 38%, #cffafe 72%, #dbeafe 100%);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.75),
+        0 20px 50px -20px rgba(99, 102, 241, 0.25);
+    }
+    #job-showcase-track {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    #job-showcase-track::-webkit-scrollbar {
+      display: none;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+      .float-gentle,
+      .float-gentle-card {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+<body class="bg-[#fafafa] text-neutral-900 antialiased">
+
+  <!-- Navigation (Nerdstack-like: light bar, cyan accents) -->
+  <nav class="sticky top-0 z-30 border-b border-neutral-200/90 bg-white/90 backdrop-blur-md">
+    <div class="container mx-auto px-4 md:px-6 py-3.5 flex flex-col lg:flex-row items-center justify-between gap-4">
+      <a href="index.html" class="flex items-baseline gap-1.5 font-bold tracking-tight">
+        <span class="text-2xl text-cyan-600">EASY</span><span class="text-lg font-semibold text-neutral-900">Easy Job</span>
+      </a>
+      <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm font-medium text-neutral-600">
+        <a href="index.html" class="hover:text-cyan-600 transition">Home</a>
+        <a href="quiz.html" class="hover:text-cyan-600 transition">JOB Quiz</a>
+        <a href="job-search.html" class="hover:text-cyan-600 transition">JOB Search</a>
+        <a href="cv-template.html" class="hover:text-cyan-600 transition">CV Template</a>
+        <a href="coach.html" class="hover:text-cyan-600 transition">Interview Coach</a>
+      </div>
+      <div class="flex w-full lg:w-auto items-center gap-3 justify-center lg:justify-end">
+        <div class="relative flex-1 min-w-0 lg:w-56">
+          <input type="text" placeholder="Search" aria-label="Search"
+                 class="w-full rounded-full border border-neutral-200 bg-neutral-50 py-2.5 pl-4 pr-10 text-sm text-neutral-800 placeholder:text-neutral-400 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20">
+          <button type="button" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-cyan-600" aria-label="Submit search">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </button>
+        </div>
+        <a href="login.html" class="shrink-0 text-sm font-medium text-neutral-600 hover:text-cyan-600 transition">Login</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- AI Interview Coach — Nerdstack-style hero, Easy Job cyan + your copy -->
+  <section class="bg-white text-neutral-900 py-20 md:py-28 md:min-h-[32rem] flex items-center" aria-label="AI Interview Coach">
+    <div class="container mx-auto px-4 md:px-6 max-w-3xl text-center w-full">
+      <p class="reveal text-xs font-semibold uppercase tracking-[0.2em] text-cyan-600" style="transition-delay: 0ms">Interview Coach</p>
+      <div class="reveal mt-4" style="transition-delay: 90ms">
+        <h1 class="float-gentle text-4xl sm:text-5xl md:text-[3.25rem] font-bold tracking-tight text-neutral-950 leading-[1.1]">AI Interview Coach</h1>
+      </div>
+      <p class="reveal mt-6 text-lg md:text-xl text-neutral-500 max-w-2xl mx-auto leading-relaxed font-medium" style="transition-delay: 180ms">
+        "Elevate Your Interview Skills: Prepare, Impress, Succeed!"
+      </p>
+      <div class="reveal mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4" style="transition-delay: 260ms">
+        <a href="coach.html"
+           class="inline-flex items-center gap-2 rounded-full bg-cyan-600 px-7 py-3.5 text-sm font-semibold text-white hover:bg-cyan-700 transition shadow-sm">
+          Call to action
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+          </svg>
+        </a>
+        <a href="#ai-coach-preview"
+           class="inline-flex items-center justify-center rounded-full border border-neutral-200 bg-neutral-100 px-7 py-3.5 text-sm font-semibold text-neutral-800 hover:bg-neutral-200/80 transition">
+          See chat preview
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Job Quiz: light overlay + rotating JOb/*.png (your headline & quote unchanged) -->
+  <section class="relative overflow-hidden text-white" aria-label="Job Quiz">
+    <div class="absolute inset-0 z-0" aria-hidden="true">
+      <div class="job-quiz-slide is-active" style="background-image: url('JOb/1.png');"></div>
+      <div class="job-quiz-slide" style="background-image: url('JOb/2.png');"></div>
+      <div class="job-quiz-slide" style="background-image: url('JOb/3.png');"></div>
+    </div>
+    <div class="absolute inset-0 z-[1] bg-gradient-to-br from-white/93 via-cyan-50/88 to-white/90" aria-hidden="true"></div>
+    <div class="relative z-[2] container mx-auto px-6 md:px-10 py-20 md:py-28 min-h-[24rem] md:min-h-[28rem] flex items-center justify-center text-center">
+      <div class="max-w-2xl">
+        <p class="reveal text-xs font-semibold uppercase tracking-[0.2em] text-cyan-700" style="transition-delay: 0ms">Job Quiz</p>
+        <div class="reveal mt-4" style="transition-delay: 90ms">
+          <h2 class="float-gentle text-4xl sm:text-5xl font-bold tracking-tight text-neutral-950 inline-block">Job Quiz!</h2>
+        </div>
+        <p class="reveal mt-5 text-lg md:text-xl text-neutral-600 font-medium leading-relaxed" style="transition-delay: 180ms">"Unlock Your Potential: Take the Quiz, Find Your Fit!"</p>
+        <button type="button" onclick="window.location.href='quiz.html'"
+                class="reveal mt-8 inline-flex items-center gap-2 rounded-full bg-cyan-600 px-8 py-3.5 text-sm font-semibold text-white hover:bg-cyan-700 transition shadow-sm" style="transition-delay: 260ms">
+          Quiz now!
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Find Job — gradient showcase + sliding job cards -->
+  <section id="find-job" class="bg-white border-y border-neutral-200/80 py-16 md:py-24" aria-label="Find a job">
+    <div class="container mx-auto px-4 md:px-6 max-w-3xl text-center">
+      <p class="reveal text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600" style="transition-delay: 0ms">JOBS</p>
+      <div class="reveal mt-4" style="transition-delay: 90ms">
+        <h2 class="float-gentle text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-neutral-950 leading-[1.12]">Reveal roles that fit your story</h2>
+      </div>
+      <p class="reveal mt-5 text-base md:text-lg text-neutral-500 max-w-2xl mx-auto leading-relaxed font-medium" style="transition-delay: 180ms">
+        Skim live-style openings in one glance—then open JOB Search to filter by place, pay, and type.
+      </p>
+      <div class="reveal mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4" style="transition-delay: 260ms">
+        <a href="job-search.html"
+           class="inline-flex items-center gap-2 rounded-full bg-cyan-600 px-7 py-3.5 text-sm font-semibold text-white hover:bg-cyan-700 transition shadow-sm">
+          Open JOB Search
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+          </svg>
+        </a>
+        <a href="quiz.html"
+           class="inline-flex items-center justify-center rounded-full border border-neutral-200 bg-neutral-50 px-7 py-3.5 text-sm font-semibold text-neutral-800 hover:bg-neutral-100 transition">
+          Take the quiz first
+        </a>
+      </div>
+    </div>
+
+    <div class="w-full mt-12 md:mt-16">
+      <div class="reveal relative job-showcase-glow p-5 md:p-8 md:px-10" style="transition-delay: 120ms">
+        <div id="job-showcase-track"
+             class="flex gap-4 md:gap-5 overflow-x-auto scroll-smooth py-2 pl-1 pr-1 md:px-0 [-webkit-overflow-scrolling:touch]">
+          <a href="job-search.html" class="job-card group flex-shrink-0 w-[min(85vw,300px)] md:w-[min(32%,320px)] snap-start rounded-2xl bg-white p-5 shadow-lg border border-white/90 text-left transition duration-300 hover:-translate-y-1 hover:shadow-xl">
+            <div class="flex flex-wrap gap-2">
+              <span class="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-violet-100 text-violet-800">Full-time</span>
+              <span class="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-cyan-100 text-cyan-800">On-site</span>
+            </div>
+            <h3 class="mt-4 text-lg font-bold text-neutral-900 leading-snug">Administrative Officer</h3>
+            <p class="text-sm text-neutral-500 mt-1">Harbour Education Group</p>
+            <p class="text-xs text-neutral-400 mt-4">HK$18k–22k · Central</p>
+          </a>
+          <a href="job-search.html" class="job-card group flex-shrink-0 w-[min(85vw,300px)] md:w-[min(32%,320px)] snap-start rounded-2xl bg-white p-5 shadow-lg border border-white/90 text-left transition duration-300 hover:-translate-y-1 hover:shadow-xl">
+            <div class="flex flex-wrap gap-2">
+              <span class="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">Contract</span>
+              <span class="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-sky-100 text-sky-800">Hybrid</span>
+            </div>
+            <h3 class="mt-4 text-lg font-bold text-neutral-900 leading-snug">Marketing Assistant</h3>
+            <p class="text-sm text-neutral-500 mt-1">Nova Retail Ltd</p>
+            <p class="text-xs text-neutral-400 mt-4">HK$16k–20k · Kowloon Bay</p>
+          </a>
+          <a href="job-search.html" class="job-card group flex-shrink-0 w-[min(85vw,300px)] md:w-[min(32%,320px)] snap-start rounded-2xl bg-white p-5 shadow-lg border border-white/90 text-left transition duration-300 hover:-translate-y-1 hover:shadow-xl">
+            <div class="flex flex-wrap gap-2">
+              <span class="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-violet-100 text-violet-800">Full-time</span>
+              <span class="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-amber-100 text-amber-900">Entry</span>
+            </div>
+            <h3 class="mt-4 text-lg font-bold text-neutral-900 leading-snug">Customer Service Rep</h3>
+            <p class="text-sm text-neutral-500 mt-1">CityLink Services</p>
+            <p class="text-xs text-neutral-400 mt-4">HK$15k–18k · Mong Kok</p>
+          </a>
+          <a href="job-search.html" class="job-card group flex-shrink-0 w-[min(85vw,300px)] md:w-[min(32%,320px)] snap-start rounded-2xl bg-white p-5 shadow-lg border border-white/90 text-left transition duration-300 hover:-translate-y-1 hover:shadow-xl">
+            <div class="flex flex-wrap gap-2">
+              <span class="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-rose-100 text-rose-800">Part-time</span>
+              <span class="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-cyan-100 text-cyan-800">Remote</span>
+            </div>
+            <h3 class="mt-4 text-lg font-bold text-neutral-900 leading-snug">Content Writer</h3>
+            <p class="text-sm text-neutral-500 mt-1">Pulse Media</p>
+            <p class="text-xs text-neutral-400 mt-4">HK$120/hr · Remote</p>
+          </a>
+          <a href="job-search.html" class="job-card group flex-shrink-0 w-[min(85vw,300px)] md:w-[min(32%,320px)] snap-start rounded-2xl bg-white p-5 shadow-lg border border-white/90 text-left transition duration-300 hover:-translate-y-1 hover:shadow-xl">
+            <div class="flex flex-wrap gap-2">
+              <span class="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-violet-100 text-violet-800">Full-time</span>
+              <span class="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-sky-100 text-sky-800">Education</span>
+            </div>
+            <h3 class="mt-4 text-lg font-bold text-neutral-900 leading-snug">Teaching Assistant</h3>
+            <p class="text-sm text-neutral-500 mt-1">Bright Learning Centre</p>
+            <p class="text-xs text-neutral-400 mt-4">HK$17k–21k · Sha Tin</p>
+          </a>
+          <a href="job-search.html" class="job-card group flex-shrink-0 w-[min(85vw,300px)] md:w-[min(32%,320px)] snap-start rounded-2xl bg-white p-5 shadow-lg border border-white/90 text-left transition duration-300 hover:-translate-y-1 hover:shadow-xl">
+            <div class="flex flex-wrap gap-2">
+              <span class="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800">Internship</span>
+              <span class="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-cyan-100 text-cyan-800">On-site</span>
+            </div>
+            <h3 class="mt-4 text-lg font-bold text-neutral-900 leading-snug">HR Intern</h3>
+            <p class="text-sm text-neutral-500 mt-1">Summit Holdings</p>
+            <p class="text-xs text-neutral-400 mt-4">Stipend · Admiralty</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CV Section: your copy + carousel + three template cards -->
+  <section id="cv-section" class="cv-showcase-bg text-white py-16 md:py-24 border-t border-cyan-700/30">
+    <div class="container mx-auto px-4 md:px-6 text-center max-w-3xl">
+      <p class="reveal text-xs font-semibold uppercase tracking-[0.2em] text-white/80" style="transition-delay: 0ms">CV Builder</p>
+      <div class="reveal mt-4" style="transition-delay: 90ms">
+        <h2 class="float-gentle text-2xl md:text-4xl font-bold tracking-tight">CREATE YOUR OWN CV!</h2>
+      </div>
+      <p class="reveal mt-5 text-base md:text-lg text-white/90 leading-relaxed" style="transition-delay: 180ms">
+        A clear CV helps employers see your strengths fast. Choose a template, add your details, and you’re ready to apply.
+      </p>
+    </div>
+
+    <div class="reveal relative max-w-6xl mx-auto mt-10 md:mt-14 px-2 md:px-14" style="transition-delay: 220ms">
+      <button type="button" id="cv-carousel-prev" aria-label="Previous templates"
+              class="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 md:w-11 md:h-11 items-center justify-center rounded-full border border-white/60 text-white hover:bg-white/15 transition shadow-md">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <button type="button" id="cv-carousel-next" aria-label="Next templates"
+              class="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 md:w-11 md:h-11 items-center justify-center rounded-full border border-white/60 text-white hover:bg-white/15 transition shadow-md">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </button>
+
+      <div id="cv-carousel-track"
+           class="flex gap-5 md:gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 md:pb-0 px-1 sm:px-0">
+        <a href="cv-template.html"
+           class="float-gentle-card group relative flex-shrink-0 w-[82vw] sm:w-[70vw] md:w-auto md:flex-1 md:min-w-0 min-h-[22rem] md:min-h-[26rem] max-w-sm md:max-w-none mx-auto sm:mx-0 rounded-sm overflow-hidden shadow-xl snap-center snap-always focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-cyan-700">
+          <div class="absolute inset-0 bg-cover bg-center transition duration-500 group-hover:scale-105" style="background-image: url('black.png');"></div>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/10"></div>
+          <div class="absolute bottom-0 left-0 right-0 p-5 md:p-6 text-left">
+            <h3 class="text-base md:text-lg font-bold uppercase tracking-wide">Black &amp; White CV</h3>
+            <p class="mt-2 text-xs md:text-sm text-white/90 leading-relaxed">Sharp and formal—great for finance, law, and traditional industries.</p>
+          </div>
+        </a>
+        <a href="cv-template.html"
+           class="float-gentle-card float-gentle-card--b group relative flex-shrink-0 w-[82vw] sm:w-[70vw] md:w-auto md:flex-1 md:min-w-0 min-h-[22rem] md:min-h-[26rem] max-w-sm md:max-w-none mx-auto sm:mx-0 rounded-sm overflow-hidden shadow-xl snap-center snap-always focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-cyan-700">
+          <div class="absolute inset-0 bg-cover bg-center transition duration-500 group-hover:scale-105" style="background-image: url('Simple.png');"></div>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/10"></div>
+          <div class="absolute bottom-0 left-0 right-0 p-5 md:p-6 text-left">
+            <h3 class="text-base md:text-lg font-bold uppercase tracking-wide">Simple CV</h3>
+            <p class="mt-2 text-xs md:text-sm text-white/90 leading-relaxed">Single-column clarity that works across roles and experience levels.</p>
+          </div>
+        </a>
+        <a href="cv-template.html"
+           class="float-gentle-card float-gentle-card--c group relative flex-shrink-0 w-[82vw] sm:w-[70vw] md:w-auto md:flex-1 md:min-w-0 min-h-[22rem] md:min-h-[26rem] max-w-sm md:max-w-none mx-auto sm:mx-0 rounded-sm overflow-hidden shadow-xl snap-center snap-always focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-cyan-700">
+          <div class="absolute inset-0 bg-cover bg-center transition duration-500 group-hover:scale-105" style="background-image: url('beige.png');"></div>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/10"></div>
+          <div class="absolute bottom-0 left-0 right-0 p-5 md:p-6 text-left">
+            <h3 class="text-base md:text-lg font-bold uppercase tracking-wide">Beige Brown Blue CV</h3>
+            <p class="mt-2 text-xs md:text-sm text-white/90 leading-relaxed">Warm and approachable—ideal for education, marketing, and client-facing roles.</p>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="reveal text-center mt-12 md:mt-14" style="transition-delay: 280ms">
+      <a href="cv-template.html"
+         class="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-semibold text-cyan-600 hover:bg-cyan-50 transition shadow-md">
+        Create Your Own CV!
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- AI Interview Coach — conversation preview -->
+  <section id="ai-coach-preview" class="bg-white py-16 md:py-20 border-t border-neutral-200/80">
+    <div class="container mx-auto px-4 md:px-6 text-center max-w-4xl">
+      <p class="reveal text-xs font-semibold uppercase tracking-[0.2em] text-cyan-600" style="transition-delay: 0ms">Preview</p>
+      <div class="reveal mt-3" style="transition-delay: 90ms">
+        <h3 class="float-gentle text-2xl md:text-3xl font-bold tracking-tight text-neutral-950">See how a session feels</h3>
+      </div>
+      <p class="reveal mt-2 text-sm text-neutral-500" style="transition-delay: 160ms">Same lines you already use on Easy Job—shown in a clean, chat-style layout.</p>
+      <div class="reveal mt-12 flex flex-col items-center space-y-8 md:space-y-0 md:flex-row md:justify-center md:gap-10 lg:gap-12" style="transition-delay: 220ms">
+        <div class="float-gentle-card flex flex-col items-center max-w-xs w-full">
+          <div class="w-full rounded-2xl border border-neutral-200 bg-neutral-50 p-4 shadow-sm">
+            <div class="rounded-xl border border-neutral-100 bg-white p-3 shadow-sm">
+              <p class="text-sm text-neutral-700">Hello! Ready to practice?</p>
+            </div>
+          </div>
+          <img src="2.png" alt="AI" class="w-12 h-12 rounded-full -mt-6 border-4 border-white shadow-md ring-1 ring-neutral-200">
+        </div>
+        <div class="float-gentle-card float-gentle-card--b flex flex-col items-center max-w-xs w-full">
+          <img src="2.png" alt="User" class="w-12 h-12 rounded-full mb-2 border-4 border-white shadow-md ring-1 ring-neutral-200">
+          <div class="w-full rounded-2xl border border-neutral-200 bg-neutral-100 p-4 shadow-sm">
+            <div class="rounded-xl border border-neutral-100 bg-white p-3 shadow-sm">
+              <p class="text-sm text-neutral-700">Yes, let's start!</p>
+            </div>
+          </div>
+        </div>
+        <div class="float-gentle-card float-gentle-card--c flex flex-col items-center max-w-xs w-full">
+          <div class="w-full rounded-2xl border border-neutral-200 bg-cyan-50/80 p-4 shadow-sm">
+            <div class="rounded-xl border border-cyan-100/80 bg-white p-3 shadow-sm">
+              <p class="text-sm text-neutral-700">Great! First question…</p>
+            </div>
+          </div>
+          <img src="2.png" alt="AI" class="w-12 h-12 rounded-full -mt-6 border-4 border-white shadow-md ring-1 ring-neutral-200">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-neutral-950 text-neutral-400 py-12 md:py-14 mt-0">
+    <div class="container mx-auto px-4 md:px-6 text-center text-sm">
+      <p class="font-medium text-neutral-500">© 2025 Easy Job. All rights reserved.</p>
+      <div class="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2 text-neutral-500">
+        <a href="job-search.html" class="hover:text-white transition">JOB Search</a>
+        <a href="quiz.html" class="hover:text-white transition">JOB Quiz</a>
+        <a href="cv-template.html" class="hover:text-white transition">CV Template</a>
+        <a href="coach.html" class="hover:text-white transition">Interview Coach</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var slides = document.querySelectorAll('.job-quiz-slide');
+      if (!slides.length) return;
+      var i = 0;
+      var INTERVAL_MS = 2500;
+      setInterval(function () {
+        slides[i].classList.remove('is-active');
+        i = (i + 1) % slides.length;
+        slides[i].classList.add('is-active');
+      }, INTERVAL_MS);
+    })();
+  </script>
+  <script>
+    (function () {
+      var track = document.getElementById('cv-carousel-track');
+      var prev = document.getElementById('cv-carousel-prev');
+      var next = document.getElementById('cv-carousel-next');
+      if (!track || !prev || !next) return;
+      function step() {
+        var card = track.querySelector('a');
+        return card ? card.offsetWidth + 20 : Math.round(track.clientWidth * 0.85);
+      }
+      prev.addEventListener('click', function () {
+        track.scrollBy({ left: -step(), behavior: 'smooth' });
+      });
+      next.addEventListener('click', function () {
+        track.scrollBy({ left: step(), behavior: 'smooth' });
+      });
+    })();
+  </script>
+  <script>
+    (function () {
+      var track = document.getElementById('job-showcase-track');
+      if (!track) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      var cards = Array.prototype.slice.call(track.querySelectorAll('.job-card'));
+      if (!cards.length) return;
+      cards.forEach(function (card) {
+        track.appendChild(card.cloneNode(true));
+      });
+      var loopPoint = Math.floor(track.scrollWidth / 2);
+      var SPEED = 0.55;
+      var paused = false;
+      function tick() {
+        if (!document.hidden && !paused) {
+          track.scrollLeft += SPEED;
+          if (track.scrollLeft >= loopPoint) {
+            track.scrollLeft -= loopPoint;
+          }
+        }
+        window.requestAnimationFrame(tick);
+      }
+      function pauseAuto() {
+        paused = true;
+      }
+      function resumeAuto() {
+        paused = false;
+      }
+      window.requestAnimationFrame(tick);
+      track.addEventListener('mouseenter', pauseAuto);
+      track.addEventListener('mouseleave', resumeAuto);
+      track.addEventListener('touchstart', pauseAuto, { passive: true });
+      track.addEventListener('touchend', resumeAuto, { passive: true });
+      document.addEventListener('visibilitychange', function () {
+        paused = document.hidden;
+      });
+    })();
+  </script>
+  <script>
+    (function () {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      var nodes = document.querySelectorAll('.reveal');
+      if (!nodes.length) return;
+      var io = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting) {
+              e.target.classList.add('is-visible');
+            }
+          });
+        },
+        { root: null, rootMargin: '0px 0px -8% 0px', threshold: 0.08 }
+      );
+      nodes.forEach(function (el) { io.observe(el); });
+    })();
+  </script>
+
+</body>
+</html>

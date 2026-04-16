@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JOB Search - EASY Easy Job</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #fff; }
+    .search-input { @apply bg-white rounded-full px-8 py-5 text-lg shadow-lg border-4 border-white focus:outline-none; }
+    .search-btn { @apply bg-black text-white px-12 py-5 rounded-full font-bold hover:bg-gray-800; }
+    .card { @apply bg-white rounded-3xl shadow-xl border-4 border-black p-8 text-center; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- 导航栏 + 搜索栏（保持不变） -->
+  <nav class="bg-cyan-500 text-white py-5 shadow-lg">
+    <div class="container mx-auto px-6 flex items-center justify-between">
+      <a href="index.html" class="text-3xl font-bold">EASY Job</a>
+      <div class="hidden md:flex items-center space-x-10 text-sm font-medium">
+        <a href="index.html" class="hover:underline">Home</a>
+        <a href="quiz.html" class="hover:underline">JOB Quiz</a>
+        <a href="job-search.html" class="underline font-bold">JOB Search</a>
+        <a href="cv-template.html" class="hover:underline">CV Template</a>
+        <a href="coach.html" class="hover:underline">Interview Coach</a>
+        <a href="login.html" class="bg-black px-6 py-3 rounded-full">Login</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="bg-cyan-500 py-12">
+    <div class="container mx-auto px-6 max-w-6xl">
+      <div class="flex flex-col md:flex-row items-center justify-center gap-6 text-white font-medium text-lg">
+        <span>Where</span>
+        <input type="text" value="Hong Kong" class="search-input w-full md:w-80">
+        <span>Paying</span>
+        <input type="text" value="$100+" class="search-input w-full md:w-64">
+        <span>Type</span>
+        <input type="text" value="Education" class="search-input w-full md:w-80">
+        <button class="search-btn">Search</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 主体内容：完全按照你图二布局 -->
+  <div class="container mx-auto px-6 py-16 max-w-7xl">
+
+    <!-- 第一行：Classification + Trending（左右并排）-->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-16 items-start">
+      
+
+
+      <!-- 右边：Trending Jobs 大图（占8栏）-->
+      <div class="lg:col-span-8">
+        <h2 class="text-4xl font-black mb-8">Trending Jobs Hiring Now!</h2>
+        <div class="rounded-3xl overflow-hidden shadow-2xl">
+          <img src="search.png" alt="Trending Jobs" class="w-full">
+        </div>
+      </div>
+    </div>
+
+    <!-- 第二行：Recommended Jobs 标题 + 六宫格卡片 -->
+    <div class="text-center">
+      <h2 class="text-4xl font-black mb-12">Recommended Jobs</h2>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 max-w-6xl mx-auto">
+        <div class="card">
+          <div class="text-2xl font-bold">公司文員</div>
+          <div class="text-gray-500 text-sm mt-3">1 to 2 years | Diploma of Secondary School</div>
+        </div>
+        <div class="card">
+          <div class="text-2xl font-bold">公司文員</div>
+          <div class="text-gray-500 text-sm mt-3">1 to 2 years | Diploma of Secondary School</div>
+        </div>
+        <div class="card">
+          <div class="text-2xl font-bold">公司文員</div>
+          <div class="text-gray-500 text-sm mt-3">1 to 2 years | Diploma of Secondary School</div>
+        </div>
+        <div class="card">
+          <div class="text-2xl font-bold">公司文員</div>
+          <div class="text-gray-500 text-sm mt-3">1 to 2 years | Diploma of Secondary School</div>
+        </div>
+        <div class="card">
+          <div class="text-2xl font-bold">公司文員</div>
+          <div class="text-gray-500 text-sm mt-3">1 to 2 years | Diploma of Secondary School</div>
+        </div>
+        <div class="card">
+          <div class="text-2xl font-bold">公司文員</div>
+          <div class="text-gray-500 text-sm mt-3">1 to 2 years | Diploma of Secondary School</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
