@@ -1,0 +1,17 @@
+/* Shared site styles (aligned to index.html) */
+
+/* Use Inter everywhere (font is loaded per-page via Google Fonts link). */
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+/* Sensible defaults for all pages */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Utility: prevent layout shift when page uses sticky nav */
+.site-main {
+  min-height: 0;
+}
+
