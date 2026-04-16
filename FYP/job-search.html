@@ -11,13 +11,11 @@
     body { background: #fff; }
     .search-input { @apply bg-white rounded-full px-8 py-5 text-lg shadow-lg border-4 border-white focus:outline-none; }
     .search-btn { @apply bg-black text-white px-12 py-5 rounded-full font-bold hover:bg-gray-800; }
-    .card { @apply bg-white rounded-2xl border border-neutral-200 shadow-sm p-4 md:p-5 text-left h-full flex flex-col transition duration-300; animation: card-float 5.2s ease-in-out infinite; }
-    .card:hover { @apply -translate-y-1 shadow-md border-neutral-300; animation-play-state: paused; }
-    .salary-pill { @apply inline-flex items-center rounded-md bg-emerald-50 px-2.5 py-1 text-emerald-800 font-bold tracking-tight; }
-    .job-tag { @apply inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-semibold; }
-    .job-tag--type { @apply bg-amber-100 text-amber-800; }
-    .job-tag--cat { @apply bg-cyan-100 text-cyan-800; }
-    .company-badge { @apply w-14 h-14 rounded-xl flex items-center justify-center text-xs font-bold text-white; }
+    .card { @apply rounded-3xl border border-[#d9e4ef] bg-[#f8fbff] shadow-sm p-5 md:p-6 text-left h-full flex flex-col transition duration-300; animation: card-float 5.2s ease-in-out infinite; }
+    .card:hover { @apply -translate-y-1 shadow-md; animation-play-state: paused; }
+    .job-tag { @apply inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide; }
+    .job-tag--type { @apply bg-emerald-100 text-emerald-800; }
+    .job-tag--mode { @apply bg-sky-100 text-sky-800; }
     @keyframes card-float {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-3px); }
@@ -71,10 +69,16 @@
               <select id="jobCategory"
                 class="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-800 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20">
                 <option>Any category</option>
+                <option>Technology &amp; IT</option>
+                <option>Finance &amp; Accounting</option>
+                <option>Marketing &amp; Sales</option>
+                <option>Healthcare</option>
                 <option>Education</option>
+                <option>Engineering</option>
+                <option>Design &amp; Creative</option>
                 <option>Administration</option>
-                <option>Marketing</option>
-                <option>IT</option>
+                <option>Human Resources</option>
+                <option>Other</option>
               </select>
             </div>
             <div class="md:col-span-3">
@@ -203,16 +207,21 @@
   <!-- Main content -->
   <div class="container mx-auto px-6 py-16 max-w-7xl">
 
-    <!-- Row 1: Classification + Trending -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-16 items-start">
-      
-
-
-      <!-- Right: Trending jobs image -->
-      <div class="lg:col-span-8">
-        <h2 class="text-4xl font-black mb-8">Trending Jobs Hiring Now!</h2>
-        <div class="rounded-3xl overflow-hidden shadow-2xl">
-          <img src="search.png" alt="Trending Jobs" class="w-full">
+    <!-- Classification panel -->
+    <div class="mb-14">
+      <h2 class="text-4xl font-black mb-8">Classification</h2>
+      <div class="rounded-3xl border border-neutral-200 bg-white shadow-sm p-6">
+        <div id="categoryQuickList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <button type="button" data-category="Technology &amp; IT" class="category-quick-btn text-left rounded-xl border border-neutral-200 px-4 py-3 hover:border-cyan-300 hover:bg-cyan-50/50 transition">Technology &amp; IT</button>
+          <button type="button" data-category="Finance &amp; Accounting" class="category-quick-btn text-left rounded-xl border border-neutral-200 px-4 py-3 hover:border-cyan-300 hover:bg-cyan-50/50 transition">Finance &amp; Accounting</button>
+          <button type="button" data-category="Marketing &amp; Sales" class="category-quick-btn text-left rounded-xl border border-neutral-200 px-4 py-3 hover:border-cyan-300 hover:bg-cyan-50/50 transition">Marketing &amp; Sales</button>
+          <button type="button" data-category="Healthcare" class="category-quick-btn text-left rounded-xl border border-neutral-200 px-4 py-3 hover:border-cyan-300 hover:bg-cyan-50/50 transition">Healthcare</button>
+          <button type="button" data-category="Education" class="category-quick-btn text-left rounded-xl border border-neutral-200 px-4 py-3 hover:border-cyan-300 hover:bg-cyan-50/50 transition">Education</button>
+          <button type="button" data-category="Engineering" class="category-quick-btn text-left rounded-xl border border-neutral-200 px-4 py-3 hover:border-cyan-300 hover:bg-cyan-50/50 transition">Engineering</button>
+          <button type="button" data-category="Design &amp; Creative" class="category-quick-btn text-left rounded-xl border border-neutral-200 px-4 py-3 hover:border-cyan-300 hover:bg-cyan-50/50 transition">Design &amp; Creative</button>
+          <button type="button" data-category="Administration" class="category-quick-btn text-left rounded-xl border border-neutral-200 px-4 py-3 hover:border-cyan-300 hover:bg-cyan-50/50 transition">Administration</button>
+          <button type="button" data-category="Human Resources" class="category-quick-btn text-left rounded-xl border border-neutral-200 px-4 py-3 hover:border-cyan-300 hover:bg-cyan-50/50 transition">Human Resources</button>
+          <button type="button" data-category="Other" class="category-quick-btn text-left rounded-xl border border-neutral-200 px-4 py-3 hover:border-cyan-300 hover:bg-cyan-50/50 transition">Other</button>
         </div>
       </div>
     </div>
@@ -239,20 +248,11 @@
       return 'Full-time';
     }
 
-    function companyInitials(name) {
-      var clean = String(name || '').trim();
-      if (!clean) return 'CO';
-      var words = clean.split(/\s+/).filter(Boolean);
-      if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
-      return (words[0][0] + words[1][0]).toUpperCase();
-    }
-
-    function badgeColorSeed(str) {
-      var s = String(str || '');
-      var sum = 0;
-      for (var i = 0; i < s.length; i++) sum += s.charCodeAt(i);
-      var palette = ['#0ea5e9', '#2563eb', '#7c3aed', '#14b8a6', '#ea580c', '#16a34a'];
-      return palette[sum % palette.length];
+    function inferWorkMode(job) {
+      var text = (((job && job.location) || '') + ' ' + ((job && job.requirements) || '')).toLowerCase();
+      if (text.includes('remote')) return 'Remote';
+      if (text.includes('hybrid')) return 'Hybrid';
+      return 'On-site';
     }
 
     function buildCard(job) {
@@ -263,25 +263,21 @@
       var salary = esc(job && (job.salary_range || ''));
       var category = esc(job && (job.category || ''));
       var type = esc(inferJobType(job));
+      var mode = esc(inferWorkMode(job));
       var href = id ? ('job-detail.html?id=' + encodeURIComponent(id)) : '#';
       var flowDelay = ((id || 1) % 7) * 0.18;
-      var initials = esc(companyInitials(job && job.company));
-      var badgeBg = badgeColorSeed(job && job.company);
 
       return (
         '<a class="card block" style="animation-delay:-' + flowDelay + 's" href="' + href + '">' +
-          '<div class="flex items-start justify-between gap-3">' +
-            '<div class="flex flex-wrap gap-1.5">' +
-              '<span class="job-tag job-tag--type">' + type + '</span>' +
-              '<span class="job-tag job-tag--cat">' + (category || 'General') + '</span>' +
-            '</div>' +
-            '<div class="company-badge shrink-0" style="background:' + badgeBg + '">' + initials + '</div>' +
+          '<div class="flex flex-wrap gap-2">' +
+            '<span class="job-tag job-tag--type">' + type + '</span>' +
+            '<span class="job-tag job-tag--mode">' + mode + '</span>' +
           '</div>' +
-          '<h3 class="mt-3 text-[1.7rem] leading-tight font-bold text-neutral-900 line-clamp-2">' + (title || 'Untitled role') + '</h3>' +
-          '<p class="mt-2 text-sm text-neutral-500 truncate">' + (company || 'Unknown company') + '</p>' +
-          '<p class="mt-1 text-sm text-neutral-500">' + (location || 'Hong Kong') + '</p>' +
-          '<div class="mt-auto pt-4 border-t border-dashed border-neutral-200 flex items-center justify-end gap-3">' +
-            '<span class="salary-pill">' + (salary || 'Negotiable') + '</span>' +
+          '<h3 class="mt-4 text-[2rem] leading-[1.1] font-extrabold text-neutral-900 line-clamp-2">' + (title || 'Untitled role') + '</h3>' +
+          '<p class="mt-2 text-[1.1rem] text-neutral-500 truncate">' + (company || 'Unknown company') + '</p>' +
+          '<p class="mt-4 text-sm text-neutral-400">' + (salary || 'Negotiable') + ' · ' + (location || 'Hong Kong') + '</p>' +
+          '<div class="mt-auto pt-1"></div>' +
+          '<div class="hidden text-xs text-neutral-400">' + (category || 'General') + '</div>' +
           '</div>' +
         '</a>'
       );
@@ -507,6 +503,17 @@
       });
       var cat = document.getElementById('jobCategory');
       if (cat) cat.addEventListener('change', runSearch);
+
+      // Click category box -> set dropdown + run search
+      document.querySelectorAll('.category-quick-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var selectedCategory = btn.getAttribute('data-category') || '';
+          if (cat) cat.value = selectedCategory;
+          runSearch();
+          var results = document.getElementById('jobResultsGrid');
+          if (results) results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
 
       runSearch();
     });
