@@ -29,8 +29,8 @@ def init_db():
         print("✅ Connected successfully")
         conn.close()
 
-# --- 核心新增功能：获取职位列表 (支持搜索) ---
-def get_jobs(limit=50, location=None, min_salary=None, category=None):
+# --- Get job list (supports search) ---
+def get_jobs(limit=50, q=None, location=None, min_salary=None, category=None):
     try:
         conn = get_db_connection()
         if conn is None: return []
@@ -39,7 +39,13 @@ def get_jobs(limit=50, location=None, min_salary=None, category=None):
         query = "SELECT * FROM jobs WHERE 1=1"
         params = []
         
-        # 动态添加筛选条件
+        # Dynamic filters
+        if q and q.strip():
+            # Search across common fields
+            query += " AND (title ILIKE %s OR company ILIKE %s OR requirements ILIKE %s)"
+            like = f"%{q.strip()}%"
+            params.extend([like, like, like])
+
         if location and location.strip():
             query += " AND location ILIKE %s" # ILIKE 不区分大小写
             params.append(f"%{location.strip()}%")

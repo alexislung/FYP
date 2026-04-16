@@ -53,12 +53,12 @@
           <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
             <div class="md:col-span-4">
               <label class="block text-xs font-semibold tracking-wide text-neutral-500 mb-2">Keywords</label>
-              <input type="text" placeholder="Enter keywords"
+              <input type="text" id="jobQ" placeholder="Enter keywords"
                      class="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-800 placeholder:text-neutral-400 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20">
             </div>
             <div class="md:col-span-3">
               <label class="block text-xs font-semibold tracking-wide text-neutral-500 mb-2">Category</label>
-              <select
+              <select id="jobCategory"
                 class="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-800 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20">
                 <option>Any category</option>
                 <option>Education</option>
@@ -69,11 +69,11 @@
             </div>
             <div class="md:col-span-3">
               <label class="block text-xs font-semibold tracking-wide text-neutral-500 mb-2">Location</label>
-              <input type="text" placeholder="Enter district, city, or region"
+              <input type="text" id="jobLocation" placeholder="Enter district, city, or region"
                      class="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-800 placeholder:text-neutral-400 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20">
             </div>
             <div class="md:col-span-2 flex md:justify-end">
-              <button class="w-full md:w-auto inline-flex items-center justify-center rounded-2xl bg-cyan-600 px-6 py-3 text-sm font-semibold text-white hover:bg-cyan-700 transition shadow-sm">
+              <button id="jobSearchBtn" class="w-full md:w-auto inline-flex items-center justify-center rounded-2xl bg-cyan-600 px-6 py-3 text-sm font-semibold text-white hover:bg-cyan-700 transition shadow-sm">
                 Search
               </button>
             </div>
@@ -93,7 +93,7 @@
               </svg>
             </button>
             <button type="button" class="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-100 transition">
-              Salary from $0
+              Salary
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-neutral-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd" />
               </svg>
@@ -137,35 +137,99 @@
     <div class="text-center">
       <h2 class="text-4xl font-black mb-12">Recommended Jobs</h2>
       
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 max-w-6xl mx-auto">
-        <div class="card">
-          <div class="text-2xl font-bold">Company Clerk</div>
-          <div class="text-gray-500 text-sm mt-3">1 to 2 years | Diploma of Secondary School</div>
-        </div>
-        <div class="card">
-          <div class="text-2xl font-bold">Company Clerk</div>
-          <div class="text-gray-500 text-sm mt-3">1 to 2 years | Diploma of Secondary School</div>
-        </div>
-        <div class="card">
-          <div class="text-2xl font-bold">Company Clerk</div>
-          <div class="text-gray-500 text-sm mt-3">1 to 2 years | Diploma of Secondary School</div>
-        </div>
-        <div class="card">
-          <div class="text-2xl font-bold">Company Clerk</div>
-          <div class="text-gray-500 text-sm mt-3">1 to 2 years | Diploma of Secondary School</div>
-        </div>
-        <div class="card">
-          <div class="text-2xl font-bold">Company Clerk</div>
-          <div class="text-gray-500 text-sm mt-3">1 to 2 years | Diploma of Secondary School</div>
-        </div>
-        <div class="card">
-          <div class="text-2xl font-bold">Company Clerk</div>
-          <div class="text-gray-500 text-sm mt-3">1 to 2 years | Diploma of Secondary School</div>
-        </div>
-      </div>
+      <div id="jobResultsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 max-w-6xl mx-auto"></div>
+      <p id="jobResultsMeta" class="text-sm text-gray-500 mt-6"></p>
     </div>
 
   </div>
+  <script>
+    function esc(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function buildCard(job) {
+      var id = job && job.id;
+      var title = esc(job && job.title);
+      var company = esc(job && job.company);
+      var location = esc(job && (job.location || ''));
+      var salary = esc(job && (job.salary_range || ''));
+      var category = esc(job && (job.category || ''));
+      var href = id ? ('job-detail.html?id=' + encodeURIComponent(id)) : '#';
+
+      return (
+        '<a class="card block hover:-translate-y-1 transition" href="' + href + '">' +
+          '<div class="text-2xl font-bold">' + (title || 'Untitled role') + '</div>' +
+          '<div class="text-gray-500 text-sm mt-2">' + (company || 'Unknown company') + '</div>' +
+          '<div class="text-gray-500 text-sm mt-3">' +
+            [category, location, salary].filter(Boolean).join(' · ') +
+          '</div>' +
+        '</a>'
+      );
+    }
+
+    async function runSearch() {
+      var qEl = document.getElementById('jobQ');
+      var catEl = document.getElementById('jobCategory');
+      var locEl = document.getElementById('jobLocation');
+      var btn = document.getElementById('jobSearchBtn');
+      var grid = document.getElementById('jobResultsGrid');
+      var meta = document.getElementById('jobResultsMeta');
+
+      var q = (qEl && qEl.value || '').trim();
+      var category = (catEl && catEl.value || '').trim();
+      if (category === 'Any category') category = '';
+      var location = (locEl && locEl.value || '').trim();
+
+      var params = new URLSearchParams();
+      if (q) params.set('q', q);
+      if (category) params.set('category', category);
+      if (location) params.set('location', location);
+
+      if (btn) { btn.disabled = true; btn.textContent = 'Searching...'; }
+      if (grid) grid.innerHTML = '<div class="col-span-full text-center text-gray-500">Loading...</div>';
+      if (meta) meta.textContent = '';
+
+      try {
+        var res = await fetch('/api/jobs?' + params.toString());
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        var jobs = await res.json();
+        if (!Array.isArray(jobs)) jobs = [];
+
+        if (!jobs.length) {
+          if (grid) grid.innerHTML = '<div class="col-span-full text-center text-gray-500">No jobs found. Try different keywords or filters.</div>';
+          if (meta) meta.textContent = '0 results';
+          return;
+        }
+
+        if (grid) grid.innerHTML = jobs.map(buildCard).join('');
+        if (meta) meta.textContent = jobs.length + ' result' + (jobs.length === 1 ? '' : 's');
+      } catch (e) {
+        console.error(e);
+        if (grid) grid.innerHTML = '<div class="col-span-full text-center text-red-500">Failed to search. Make sure the server is running.</div>';
+        if (meta) meta.textContent = '';
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Search'; }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      var btn = document.getElementById('jobSearchBtn');
+      if (btn) btn.addEventListener('click', runSearch);
+      ['jobQ', 'jobLocation'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            runSearch();
+          }
+        });
+      });
+      var cat = document.getElementById('jobCategory');
+      if (cat) cat.addEventListener('change', runSearch);
+
+      runSearch();
+    });
+  </script>
   </main>
 
   <!-- Footer (aligned to index.html) -->

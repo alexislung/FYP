@@ -22,11 +22,12 @@ def serve_index():
 @app.route('/api/jobs', methods=['GET'])
 def get_jobs():
     try:
+        q = request.args.get('q')
         location = request.args.get('location')
         salary = request.args.get('salary')
         category = request.args.get('category')
         
-        jobs = database.get_jobs(location=location, min_salary=salary, category=category)
+        jobs = database.get_jobs(q=q, location=location, min_salary=salary, category=category)
         return jsonify(jobs)
     except Exception as e:
         print(f"Error getting jobs: {e}")
