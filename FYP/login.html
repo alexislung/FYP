@@ -6,6 +6,7 @@
   <title>Log In to EasyJob</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link href="common.css" rel="stylesheet">
   <style>
@@ -57,21 +58,21 @@
         <!-- First Name -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">FIRST NAME</label>
-          <input type="text" value="John" required
+          <input type="text" value="John"
                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
         </div>
 
         <!-- Email -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">EMAIL ADDRESS</label>
-          <input type="email" value="johndoe@example.com" required
+          <input type="email" id="loginEmail" placeholder="you@example.com" required
                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
         </div>
 
         <!-- Password -->
         <div class="relative">
           <label class="block text-sm font-medium text-gray-700 mb-1">PASSWORD</label>
-          <input type="password" value="********" required
+          <input type="password" id="loginPassword" placeholder="Your password" required
                  class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
           <button type="button" onclick="togglePassword(this)"
                   class="absolute right-3 top-10 text-gray-500 hover:text-gray-700">
@@ -92,6 +93,7 @@
 
         <!-- Submit Button -->
         <button type="submit"
+                id="loginSubmitBtn"
                 class="w-full py-3 mt-6 bg-black text-white rounded-lg font-semibold hover:bg-gray-800 transition">
           LOGIN YOUR ACCOUNT
         </button>
@@ -112,7 +114,7 @@
 
       <!-- Sign Up Link -->
       <p class="text-center mt-6 text-sm text-gray-600">
-        New User? <a href="#" class="text-cyan-600 font-semibold underline">SIGN UP HERE</a>
+        New User? <a href="signup.html" class="text-cyan-600 font-semibold underline">SIGN UP HERE</a>
       </p>
     </div>
   </div>
@@ -133,6 +135,14 @@
 
   <!-- Simple JS -->
   <script>
+    // ===== Supabase setup (fill these in) =====
+    // From Supabase Dashboard -> Project Settings -> API
+    const SUPABASE_URL = 'https://ylpzdegpjbkrhfbqcbvc.supabase.co'; // e.g. https://xxxx.supabase.co
+    const SUPABASE_ANON_KEY = 'sb_publishable_otHMsDv-KIy08iRvQmS3rQ_5kf1GmSL'; // anon public key
+    const supabaseClient = (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase)
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
+
     // Toggle password visibility
     function togglePassword(btn) {
       const input = btn.previousElementSibling;
@@ -146,12 +156,39 @@
       }
     }
 
-    // Form submit (demo only)
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
+    // Form submit (Supabase login)
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      alert('Login successful! (This is a demo)');
-      // 在真实项目中这里发送 POST 到后端
-      // window.location.href = 'dashboard.html';
+
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+
+      if (!supabaseClient) {
+        alert('尚未設定 Supabase。請在 login.html 填入 SUPABASE_URL 與 SUPABASE_ANON_KEY。');
+        return;
+      }
+
+      const btn = document.getElementById('loginSubmitBtn');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = '登入中...';
+
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        if (!data?.session) {
+          alert('登入未完成：未取得 session（可能需要先完成 Email 驗證）。');
+          return;
+        }
+        alert('登入成功！');
+        window.location.href = 'index.html';
+      } catch (err) {
+        console.error(err);
+        alert('登入失敗：' + (err?.message || '未知錯誤'));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
     });
   </script>
 
