@@ -74,9 +74,19 @@
       color: #0369a1;
     }
     .promo-carousel-wrap {
-      border-top: 1px solid rgba(229, 231, 235, 0.9);
-      border-bottom: 1px solid rgba(229, 231, 235, 0.9);
-      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+      border-top: 1px solid rgba(219, 234, 254, 0.9);
+      border-bottom: 1px solid rgba(219, 234, 254, 0.9);
+      background:
+        linear-gradient(125deg, #ede9fe 0%, #e0e7ff 38%, #cffafe 72%, #dbeafe 100%);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.75),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.65),
+        0 20px 50px -30px rgba(99, 102, 241, 0.28);
+    }
+    .promo-carousel-fullbleed {
+      width: 100vw;
+      margin-left: calc(50% - 50vw);
+      margin-right: calc(50% - 50vw);
     }
     .promo-carousel {
       position: relative;
@@ -405,18 +415,18 @@
     </div>
 
     <!-- Safety guide carousel (under Classification) -->
-    <section class="promo-carousel-wrap rounded-3xl py-6 md:py-8 mb-14" aria-label="Job safety guide carousel">
-      <div class="container mx-auto px-4 md:px-6">
+    <section class="promo-carousel-wrap promo-carousel-fullbleed py-7 md:py-9 mb-14" aria-label="Job safety guide carousel">
+      <div class="max-w-7xl mx-auto px-4 md:px-6">
         <div id="promoCarousel" class="promo-carousel">
           <button type="button" id="promoPrev" class="promo-arrow promo-arrow--prev" aria-label="Previous slide">&#8249;</button>
           <div class="promo-stage">
-            <figure class="promo-slide is-active"><img src="../Job%20Search/1.png" data-fallback-src="/job-search-images/1.png" alt="Job guide image 1" loading="lazy"></figure>
-            <figure class="promo-slide"><img src="../Job%20Search/2.png" data-fallback-src="/job-search-images/2.png" alt="Job guide image 2" loading="lazy"></figure>
-            <figure class="promo-slide"><img src="../Job%20Search/3.png" data-fallback-src="/job-search-images/3.png" alt="Job guide image 3" loading="lazy"></figure>
-            <figure class="promo-slide"><img src="../Job%20Search/4.png" data-fallback-src="/job-search-images/4.png" alt="Job guide image 4" loading="lazy"></figure>
-            <figure class="promo-slide"><img src="../Job%20Search/5.png" data-fallback-src="/job-search-images/5.png" alt="Job guide image 5" loading="lazy"></figure>
-            <figure class="promo-slide"><img src="../Job%20Search/6.png" data-fallback-src="/job-search-images/6.png" alt="Job guide image 6" loading="lazy"></figure>
-            <figure class="promo-slide"><img src="../Job%20Search/7.png" data-fallback-src="/job-search-images/7.png" alt="Job guide image 7" loading="lazy"></figure>
+            <figure class="promo-slide is-active"><img src="4.png" data-fallback-src="/4.png" alt="Job guide image 4" loading="lazy"></figure>
+            <figure class="promo-slide"><img src="5.png" data-fallback-src="/5.png" alt="Job guide image 5" loading="lazy"></figure>
+            <figure class="promo-slide"><img src="6.png" data-fallback-src="/6.png" alt="Job guide image 6" loading="lazy"></figure>
+            <figure class="promo-slide"><img src="7.png" data-fallback-src="/7.png" alt="Job guide image 7" loading="lazy"></figure>
+            <figure class="promo-slide"><img src="8.png" data-fallback-src="/8.png" alt="Job guide image 8" loading="lazy"></figure>
+            <figure class="promo-slide"><img src="9.png" data-fallback-src="/9.png" alt="Job guide image 9" loading="lazy"></figure>
+            <figure class="promo-slide"><img src="10.png" data-fallback-src="/10.png" alt="Job guide image 10" loading="lazy"></figure>
           </div>
           <button type="button" id="promoNext" class="promo-arrow promo-arrow--next" aria-label="Next slide">&#8250;</button>
         </div>
