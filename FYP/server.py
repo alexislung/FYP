@@ -14,6 +14,7 @@ CORS(app)  # Enable CORS for all routes
 API_KEY = "sk-e66576b892ea490599f0a5c366611858"
 TARGET_URL = "https://api.deepseek.com/chat/completions"
 PORT = int(os.environ.get("PORT", 8000))
+JOB_SEARCH_IMAGE_DIR = os.path.abspath(os.path.join(app.root_path, "..", "Job Search"))
 
 @app.route('/')
 def serve_index():
@@ -172,6 +173,10 @@ def analyze_quiz():
     except Exception as e:
         print(f"Quiz error: {e}")
         return jsonify({"error": {"message": str(e)}}), 500
+
+@app.route('/job-search-images/<path:filename>')
+def serve_job_search_image(filename):
+    return send_from_directory(JOB_SEARCH_IMAGE_DIR, filename)
 
 @app.route('/<path:path>')
 def serve_static(path):

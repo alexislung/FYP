@@ -73,6 +73,127 @@
       background: #d9f6ff;
       color: #0369a1;
     }
+    .promo-carousel-wrap {
+      border-top: 1px solid rgba(229, 231, 235, 0.9);
+      border-bottom: 1px solid rgba(229, 231, 235, 0.9);
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    }
+    .promo-carousel {
+      position: relative;
+      max-width: 1024px;
+      margin: 0 auto;
+      padding: 1rem 0;
+    }
+    .promo-stage {
+      position: relative;
+      height: 250px;
+      overflow: hidden;
+    }
+    .promo-slide {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 380px;
+      max-width: calc(100vw - 9rem);
+      height: 200px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 14px 32px -16px rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(209, 213, 219, 0.9);
+      transition: transform 0.45s ease, opacity 0.45s ease, filter 0.45s ease;
+      transform: translate(-50%, -50%) scale(0.88);
+      opacity: 0;
+      filter: blur(0.5px);
+      pointer-events: none;
+    }
+    .promo-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .promo-slide.is-active {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+      z-index: 30;
+      filter: none;
+      pointer-events: auto;
+    }
+    .promo-slide.is-prev {
+      transform: translate(calc(-50% - 340px), -50%) scale(0.86);
+      opacity: 0.3;
+      z-index: 20;
+    }
+    .promo-slide.is-next {
+      transform: translate(calc(-50% + 340px), -50%) scale(0.86);
+      opacity: 0.3;
+      z-index: 20;
+    }
+    .promo-slide.is-hidden {
+      transform: translate(-50%, -50%) scale(0.82);
+      opacity: 0;
+      z-index: 10;
+    }
+    .promo-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 42px;
+      height: 42px;
+      border-radius: 9999px;
+      border: 1px solid rgba(209, 213, 219, 0.95);
+      background: rgba(255, 255, 255, 0.92);
+      color: #111827;
+      box-shadow: 0 8px 20px -12px rgba(15, 23, 42, 0.45);
+      font-size: 1.7rem;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+      transition: all 0.2s ease;
+    }
+    .promo-arrow:hover {
+      background: #ffffff;
+      transform: translateY(-50%) scale(1.05);
+    }
+    .promo-arrow--prev { left: 22%; }
+    .promo-arrow--next { right: 22%; }
+    @media (max-width: 900px) {
+      .promo-stage {
+        height: 215px;
+      }
+      .promo-slide {
+        width: min(74vw, 360px);
+        height: min(42vw, 190px);
+      }
+      .promo-slide.is-prev {
+        transform: translate(calc(-50% - 40vw), -50%) scale(0.85);
+      }
+      .promo-slide.is-next {
+        transform: translate(calc(-50% + 40vw), -50%) scale(0.85);
+      }
+      .promo-arrow--prev { left: 8px; }
+      .promo-arrow--next { right: 8px; }
+    }
+    @media (max-width: 640px) {
+      .promo-stage {
+        height: 195px;
+      }
+      .promo-slide {
+        width: min(82vw, 340px);
+        height: min(46vw, 170px);
+      }
+      .promo-slide.is-prev,
+      .promo-slide.is-next {
+        opacity: 0.18;
+      }
+      .promo-arrow {
+        width: 38px;
+        height: 38px;
+        font-size: 1.45rem;
+      }
+    }
     @keyframes card-float {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-3px); }
@@ -261,6 +382,25 @@
     </div>
   </section>
 
+  <!-- Safety guide carousel (under search) -->
+  <section class="promo-carousel-wrap py-8 md:py-10" aria-label="Job safety guide carousel">
+    <div class="container mx-auto px-4 md:px-6">
+      <div id="promoCarousel" class="promo-carousel">
+        <button type="button" id="promoPrev" class="promo-arrow promo-arrow--prev" aria-label="Previous slide">&#8249;</button>
+        <div class="promo-stage">
+          <figure class="promo-slide is-active"><img src="/job-search-images/1.png" alt="Job guide image 1" loading="lazy"></figure>
+          <figure class="promo-slide"><img src="/job-search-images/2.png" alt="Job guide image 2" loading="lazy"></figure>
+          <figure class="promo-slide"><img src="/job-search-images/3.png" alt="Job guide image 3" loading="lazy"></figure>
+          <figure class="promo-slide"><img src="/job-search-images/4.png" alt="Job guide image 4" loading="lazy"></figure>
+          <figure class="promo-slide"><img src="/job-search-images/5.png" alt="Job guide image 5" loading="lazy"></figure>
+          <figure class="promo-slide"><img src="/job-search-images/6.png" alt="Job guide image 6" loading="lazy"></figure>
+          <figure class="promo-slide"><img src="/job-search-images/7.png" alt="Job guide image 7" loading="lazy"></figure>
+        </div>
+        <button type="button" id="promoNext" class="promo-arrow promo-arrow--next" aria-label="Next slide">&#8250;</button>
+      </div>
+    </div>
+  </section>
+
   <!-- Main content -->
   <div class="container mx-auto px-6 py-16 max-w-7xl">
 
@@ -394,6 +534,73 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+      (function setupPromoCarousel() {
+        var root = document.getElementById('promoCarousel');
+        if (!root) return;
+        var slides = Array.prototype.slice.call(root.querySelectorAll('.promo-slide'));
+        var prev = document.getElementById('promoPrev');
+        var next = document.getElementById('promoNext');
+        if (!slides.length || !prev || !next) return;
+        var current = 0;
+        var timer = null;
+        function relativeIndex(i) {
+          var diff = i - current;
+          var half = Math.floor(slides.length / 2);
+          if (diff > half) diff -= slides.length;
+          if (diff < -half) diff += slides.length;
+          return diff;
+        }
+        function render() {
+          slides.forEach(function (slide, i) {
+            var diff = relativeIndex(i);
+            slide.classList.remove('is-active', 'is-prev', 'is-next', 'is-hidden');
+            if (diff === 0) {
+              slide.classList.add('is-active');
+              slide.setAttribute('aria-hidden', 'false');
+            } else if (diff === -1) {
+              slide.classList.add('is-prev');
+              slide.setAttribute('aria-hidden', 'true');
+            } else if (diff === 1) {
+              slide.classList.add('is-next');
+              slide.setAttribute('aria-hidden', 'true');
+            } else {
+              slide.classList.add('is-hidden');
+              slide.setAttribute('aria-hidden', 'true');
+            }
+          });
+        }
+        function move(step) {
+          current = (current + step + slides.length) % slides.length;
+          render();
+        }
+        function stopAuto() {
+          if (timer) {
+            clearInterval(timer);
+            timer = null;
+          }
+        }
+        function startAuto() {
+          stopAuto();
+          timer = setInterval(function () {
+            move(1);
+          }, 3600);
+        }
+        prev.addEventListener('click', function () {
+          move(-1);
+          startAuto();
+        });
+        next.addEventListener('click', function () {
+          move(1);
+          startAuto();
+        });
+        root.addEventListener('mouseenter', stopAuto);
+        root.addEventListener('mouseleave', startAuto);
+        root.addEventListener('focusin', stopAuto);
+        root.addEventListener('focusout', startAuto);
+        render();
+        startAuto();
+      })();
+
       function setupSingleMenu(dropdownId, btnId, menuId) {
         var dropdown = document.getElementById(dropdownId);
         var btn = document.getElementById(btnId);
