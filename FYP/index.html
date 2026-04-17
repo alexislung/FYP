@@ -269,7 +269,7 @@
     <div class="container mx-auto px-4 md:px-6 text-center max-w-3xl">
       <p class="reveal text-xs font-semibold uppercase tracking-[0.2em] text-white/80" style="transition-delay: 0ms">CV Builder</p>
       <div class="reveal mt-4" style="transition-delay: 90ms">
-        <h2 class="float-gentle text-2xl md:text-4xl font-bold tracking-tight">CREATE YOUR OWN CV!</h2>
+        <h2 class="float-gentle text-2xl md:text-4xl font-bold tracking-tight">CV TEMPLATE</h2>
       </div>
       <p class="reveal mt-5 text-base md:text-lg text-white/90 leading-relaxed" style="transition-delay: 180ms">
         A clear CV helps employers see your strengths fast. Choose a template, add your details, and you’re ready to apply.
@@ -277,15 +277,6 @@
     </div>
 
     <div class="reveal relative max-w-6xl mx-auto mt-10 md:mt-14 px-2 md:px-14" style="transition-delay: 220ms">
-      <button type="button" id="cv-carousel-prev" aria-label="Previous templates"
-              class="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 md:w-11 md:h-11 items-center justify-center rounded-full border border-white/60 text-white hover:bg-white/15 transition shadow-md">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-      </button>
-      <button type="button" id="cv-carousel-next" aria-label="Next templates"
-              class="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 md:w-11 md:h-11 items-center justify-center rounded-full border border-white/60 text-white hover:bg-white/15 transition shadow-md">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-      </button>
-
       <div id="cv-carousel-track"
            class="flex gap-5 md:gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 md:pb-0 px-1 sm:px-0">
         <a href="cv-template.html"
@@ -321,7 +312,7 @@
     <div class="reveal text-center mt-12 md:mt-14" style="transition-delay: 280ms">
       <a href="cv-template.html"
          class="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-semibold text-cyan-600 hover:bg-cyan-50 transition shadow-md">
-        Create Your Own CV!
+        CV TEMPLATE
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
         </svg>
@@ -390,24 +381,6 @@
         i = (i + 1) % slides.length;
         slides[i].classList.add('is-active');
       }, INTERVAL_MS);
-    })();
-  </script>
-  <script>
-    (function () {
-      var track = document.getElementById('cv-carousel-track');
-      var prev = document.getElementById('cv-carousel-prev');
-      var next = document.getElementById('cv-carousel-next');
-      if (!track || !prev || !next) return;
-      function step() {
-        var card = track.querySelector('a');
-        return card ? card.offsetWidth + 20 : Math.round(track.clientWidth * 0.85);
-      }
-      prev.addEventListener('click', function () {
-        track.scrollBy({ left: -step(), behavior: 'smooth' });
-      });
-      next.addEventListener('click', function () {
-        track.scrollBy({ left: step(), behavior: 'smooth' });
-      });
     })();
   </script>
   <script>
