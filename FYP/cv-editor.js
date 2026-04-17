@@ -6,9 +6,11 @@ const DEEPSEEK_API_KEY = 'sk-45a75bfb45174903ada13c17ceb828d4'; // Set your key 
 const url = new URLSearchParams(location.search);
 const tmplFromUrl = url.get('template') || 'black-white';
 const CV_DRAFT_KEY = 'easyjob_cv_draft';
+const CV_DOC_ID_KEY = 'easyjob_cv_doc_id';
 
 let step = 1;
 let saveDraftTimer = null;
+let saveAccountTimer = null;
 
 function getDraftData() {
   const data = collectCVData();
@@ -45,10 +47,87 @@ function saveDraft() {
     try {
       const draft = getDraftData();
       localStorage.setItem(CV_DRAFT_KEY, JSON.stringify(draft));
+      scheduleAccountAutoSave(1200);
     } catch (e) {
       console.warn('Could not save draft:', e);
     }
   }, 400);
+}
+
+function getCurrentCvHtml() {
+  var cvContent = document.getElementById('cvContent');
+  if (!cvContent) return '';
+  return (cvContent.innerHTML || '').trim();
+}
+
+function getCVDocTitle(draft, fallbackData) {
+  var d = draft || {};
+  var first = (d.firstName || '').trim();
+  var last = (d.lastName || '').trim();
+  var full = (first + ' ' + last).trim();
+  var role = (d.jobTitle || (fallbackData && fallbackData.personalInfo && fallbackData.personalInfo.jobTitle) || '').trim();
+  if (role && full) return role + ' - ' + full;
+  if (full) return 'CV - ' + full;
+  return 'CV - ' + new Date().toISOString().slice(0, 10);
+}
+
+async function autoSaveCVToAccount() {
+  try {
+    var client = window.getEasyjobSupabase && window.getEasyjobSupabase();
+    if (!client) return;
+    var sessionRes = await client.auth.getSession();
+    var session = sessionRes && sessionRes.data ? sessionRes.data.session : null;
+    if (!session || !session.user) return;
+
+    var draft = getDraftData();
+    var collected = collectCVData();
+    var html = getCurrentCvHtml();
+    if (!html) {
+      html = '<div class="cv-template" style="font-family:sans-serif;padding:20px;background:#fff;"><p style="margin:0;color:#6b7280;">Draft in progress. Generate CV to preview final layout.</p></div>';
+    }
+
+    var payload = {
+      user_id: session.user.id,
+      title: getCVDocTitle(draft, collected),
+      template: (draft && draft.template) ? String(draft.template) : (tmplFromUrl || ''),
+      content_html: html,
+      draft_json: draft
+    };
+
+    var existingId = null;
+    try { existingId = localStorage.getItem(CV_DOC_ID_KEY); } catch (_) {}
+
+    if (existingId) {
+      var upd = await client
+        .from('cv_documents')
+        .update(payload)
+        .eq('id', existingId)
+        .eq('user_id', session.user.id)
+        .select('id')
+        .single();
+      if (upd && upd.error) {
+        existingId = null;
+      }
+    }
+
+    if (!existingId) {
+      var ins = await client.from('cv_documents').insert(payload).select('id').single();
+      if (ins && !ins.error && ins.data && ins.data.id) {
+        try { localStorage.setItem(CV_DOC_ID_KEY, ins.data.id); } catch (_) {}
+      } else if (ins && ins.error) {
+        throw ins.error;
+      }
+    }
+  } catch (e) {
+    console.warn('Auto save CV failed:', e);
+  }
+}
+
+function scheduleAccountAutoSave(delayMs) {
+  if (saveAccountTimer) clearTimeout(saveAccountTimer);
+  saveAccountTimer = setTimeout(function () {
+    autoSaveCVToAccount();
+  }, typeof delayMs === 'number' ? delayMs : 1000);
 }
 
 function loadDraft() {
@@ -526,62 +605,45 @@ function getCVTemplateHTML(templateId, data, photoDataUrl) {
   }
 
   if (templateId === 'simple' || templateId === 'grey-modern') {
-    var secBar = 'style="background:#06b6d4;color:#fff;padding:6px 14px;font-size:11px;font-weight:700;letter-spacing:0.05em;border-radius:4px 0 0 4px;margin-left:-20px;padding-left:20px;"';
-    var n = skillsList.length;
-    var colSize = Math.ceil(n / 3) || 1;
-    var col1 = skillsList.slice(0, colSize).map(function (s) { return '<li style="margin-bottom:2px;">' + esc(s) + '</li>'; }).join('');
-    var col2 = skillsList.slice(colSize, colSize * 2).map(function (s) { return '<li style="margin-bottom:2px;">' + esc(s) + '</li>'; }).join('');
-    var col3 = skillsList.slice(colSize * 2).map(function (s) { return '<li style="margin-bottom:2px;">' + esc(s) + '</li>'; }).join('');
-    var skillsThreeCol = '<div style="display:flex;gap:24px;margin-top:6px;"><div style="flex:1;"><ul style="margin:0;padding-left:18px;font-size:12px;line-height:1.5;color:#111;">' + col1 + '</ul></div><div style="flex:1;"><ul style="margin:0;padding-left:18px;font-size:12px;line-height:1.5;color:#111;">' + col2 + '</ul></div><div style="flex:1;"><ul style="margin:0;padding-left:18px;font-size:12px;line-height:1.5;color:#111;">' + col3 + '</ul></div></div>';
-    var simpleExpItems = expList.map(function (e) {
-      var bullets = toBullets(e.responsibilities);
-      var ul = bullets.length ? '<ul style="margin:6px 0 0 0;padding-left:18px;font-size:12px;line-height:1.4;color:#111;">' + bullets.map(function (b) { return '<li>' + b + '</li>'; }).join('') + '</ul>' : '';
-      var endIsPresent = (e.end === 'Present' || String(e.end || '').trim() === 'Present');
-      var dateStr = endIsPresent ? (e.start ? esc(e.start) + ' - Present' : 'Present') : (esc(e.start) + ' - ' + esc(e.end));
-      var dateSpan = dateStr ? '<span style="float:right;font-size:11px;font-weight:400;">' + dateStr + '</span>' : '';
-      return '<div style="margin-bottom:14px;"><div style="overflow:hidden;"><strong>' + esc(e.title) + ', ' + esc(e.company) + '</strong> ' + dateSpan + '</div>' + ul + '</div>';
-    }).join('');
-    var simpleEduItems = eduList.map(function (e) {
-      var degreeLine = esc(e.degree) + (e.description ? ' in ' + esc(e.description) : '');
-      var dateStr = e.start && e.end ? (esc(e.start) + ' - ' + esc(e.end)) : (e.end ? esc(e.end) : '');
-      var dateSpan = dateStr ? '<span style="float:right;font-size:11px;font-weight:400;">' + dateStr + '</span>' : '';
-      return '<div style="margin-bottom:14px;"><div style="overflow:hidden;"><strong>' + degreeLine + '</strong> ' + dateSpan + '</div><div style="font-size:12px;color:#111;"><strong>' + esc(e.university || '') + '</strong></div></div>';
-    }).join('');
-    var simpleLangHtml = langList.length ? '<ul style="margin:6px 0 0 0;padding-left:18px;line-height:1.5;color:#111;"><li><strong>Languages:</strong> ' + langList.join(', ') + '.</li></ul>' : '';
-    return '<div class="cv-template cv-template-simple" style="font-family:sans-serif;max-width:210mm;margin:0 auto;background:#fff;overflow:visible;padding:20px;color:#111;">' +
-      '<div style="text-align:center;padding-bottom:12px;border-bottom:1px solid #ddd;">' +
-      '<h1 style="margin:0 0 4px 0;font-size:22px;font-weight:700;color:#111;letter-spacing:0.02em;">' + name.toUpperCase() + '</h1>' +
-      '<p style="margin:0 0 6px 0;font-size:14px;font-weight:700;color:#111;">' + title.toUpperCase() + '</p>' +
-      '<p style="margin:0;font-size:12px;color:#111;">' + [address, email, phone].filter(Boolean).map(function (x) { return esc(x); }).join(' | ') + '</p>' +
-      '</div>' +
-      '<div style="margin-top:12px;"><div ' + secBar + '>ABOUT ME</div><div style="padding:10px 0;font-size:12px;line-height:1.5;color:#111;">' + about + '</div></div>' +
-      '<div style="margin-top:12px;"><div ' + secBar + '>SKILLS</div>' + skillsThreeCol + '</div>' +
-      '<div style="margin-top:12px;"><div ' + secBar + '>WORK EXPERIENCE</div><div style="padding:10px 0;font-size:12px;color:#111;">' + simpleExpItems + '</div></div>' +
-      '<div style="margin-top:12px;"><div ' + secBar + '>EDUCATION</div><div style="padding:10px 0;font-size:12px;">' + simpleEduItems + '</div></div>' +
-      '<div style="margin-top:12px;"><div ' + secBar + '>LANGUAGES</div><div style="padding:10px 0;font-size:12px;">' + simpleLangHtml + '</div></div></div>';
+    return '<div class="cv-template cv-template-simple" style="font-family:sans-serif;max-width:210mm;margin:0 auto;border:1px solid #dbeafe;background:#fff;overflow:visible;">' +
+      '<div style="display:flex;align-items:flex-start;padding:18px 20px;gap:16px;border-bottom:1px solid #dbeafe;">' +
+      '<div style="width:80px;height:80px;border-radius:50%;overflow:hidden;background:#eff6ff;flex-shrink:0;">' + photo + '</div>' +
+      '<div style="flex:1;">' +
+      '<h1 style="margin:0 0 2px 0;font-size:20px;font-weight:700;letter-spacing:0.02em;color:#0f172a;">' + name.toUpperCase() + '</h1>' +
+      '<p style="margin:0 0 8px 0;font-size:13px;color:#0f172a;">' + title + '</p>' +
+      '<p style="margin:0;font-size:11px;color:#334155;">' + (phone ? phone + ' · ' : '') + (email ? email : '') + (address ? ' · ' + address : '') + '</p>' +
+      '</div></div>' +
+      '<div style="background:#06b6d4;padding:6px 14px;font-size:11px;font-weight:700;letter-spacing:0.05em;color:#fff;">ABOUT ME</div>' +
+      '<div style="padding:12px 16px;font-size:12px;line-height:1.5;color:#334155;">' + about + '</div>' +
+      '<div style="background:#06b6d4;padding:6px 14px;font-size:11px;font-weight:700;letter-spacing:0.05em;color:#fff;">EDUCATION</div>' +
+      '<div style="padding:12px 16px;font-size:12px;">' + eduItems + '</div>' +
+      '<div style="background:#06b6d4;padding:6px 14px;font-size:11px;font-weight:700;letter-spacing:0.05em;color:#fff;">EXPERIENCE</div>' +
+      '<div style="padding:12px 16px;font-size:12px;">' + expItems + '</div>' +
+      '<div style="background:#06b6d4;padding:6px 14px;font-size:11px;font-weight:700;letter-spacing:0.05em;color:#fff;">SKILLS</div>' +
+      '<div style="padding:12px 16px;">' + skillsUl + '</div>' +
+      '<div style="background:#06b6d4;padding:6px 14px;font-size:11px;font-weight:700;letter-spacing:0.05em;color:#fff;">LANGUAGES</div>' +
+      '<div style="padding:12px 16px;font-size:12px;"><ul style="margin:6px 0 0 0;padding-left:18px;line-height:1.5;">' + langList.map(function (l) { return '<li>' + l + '</li>'; }).join('') + '</ul></div></div>';
   }
 
   if (templateId === 'beige-brown') {
-    return '<div class="cv-template cv-template-beige" style="font-family:sans-serif;max-width:210mm;margin:0 auto;background:#f5f0e8;">' +
-      '<div style="background:linear-gradient(135deg,#4a3728 0%,#6b5344 100%);padding:20px;position:relative;">' +
-      '<div style="display:flex;align-items:flex-start;gap:16px;">' +
-      '<div style="width:88px;height:88px;border-radius:50%;overflow:hidden;background:#4a3728;border:3px solid rgba(255,255,255,0.3);flex-shrink:0;">' + photo + '</div>' +
-      '<div style="flex:1;color:#fff;">' +
-      '<h1 style="margin:0 0 2px 0;font-size:20px;font-weight:700;letter-spacing:0.02em;">' + name.toUpperCase() + '</h1>' +
-      '<p style="margin:0 0 10px 0;font-size:12px;opacity:0.95;">' + title.toUpperCase() + '</p>' +
-      '<p style="margin:0;font-size:11px;line-height:1.45;opacity:0.9;">' + about + '</p></div></div></div>' +
-      '<div style="display:flex;">' +
-      '<div style="width:72mm;padding:16px;background:#f5f0e8;">' +
-      '<p style="margin:0 0 6px 0;font-size:11px;color:#4a3728;">' + phone + '</p><p style="margin:0 0 6px 0;font-size:11px;color:#4a3728;">' + email + '</p><p style="margin:0 0 12px 0;font-size:11px;color:#4a3728;">' + address + '</p>' +
-      '<div style="color:#4a3728;font-size:10px;font-weight:700;letter-spacing:0.05em;margin-top:16px;">SKILLS</div>' +
-      '<ul style="margin:6px 0 0 0;padding-left:14px;font-size:11px;color:#333;">' + skillsList.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ul>' +
-      '<div style="color:#4a3728;font-size:10px;font-weight:700;letter-spacing:0.05em;margin-top:16px;">EDUCATION</div>' +
-      '<div style="font-size:11px;margin-top:6px;">' + eduItems + '</div>' +
-      '<div style="color:#4a3728;font-size:10px;font-weight:700;letter-spacing:0.05em;margin-top:16px;">LANGUAGE</div>' +
-      '<p style="margin:6px 0 0 0;font-size:11px;">' + langList.join(', ') + '</p></div>' +
-      '<div style="flex:1;padding:16px;border-left:1px solid #e0d8cc;font-size:12px;">' +
-      '<div style="color:#4a3728;font-size:10px;font-weight:700;letter-spacing:0.05em;margin-bottom:10px;">EXPERIENCE</div>' + expItems +
-      '</div></div></div>';
+    return '<div class="cv-template cv-template-beige" style="font-family:sans-serif;max-width:210mm;margin:0 auto;border:1px solid #dccfbd;background:#fffaf3;overflow:visible;">' +
+      '<div style="display:flex;align-items:flex-start;padding:18px 20px;gap:16px;border-bottom:1px solid #e9ddcc;background:#fff8ef;">' +
+      '<div style="width:80px;height:80px;border-radius:50%;overflow:hidden;background:#efe3d3;flex-shrink:0;">' + photo + '</div>' +
+      '<div style="flex:1;">' +
+      '<h1 style="margin:0 0 2px 0;font-size:20px;font-weight:700;letter-spacing:0.02em;color:#4a3728;">' + name.toUpperCase() + '</h1>' +
+      '<p style="margin:0 0 8px 0;font-size:13px;color:#4a3728;">' + title + '</p>' +
+      '<p style="margin:0;font-size:11px;color:#6b5344;">' + (phone ? phone + ' · ' : '') + (email ? email : '') + (address ? ' · ' + address : '') + '</p>' +
+      '</div></div>' +
+      '<div style="background:#6b5344;padding:6px 14px;font-size:11px;font-weight:700;letter-spacing:0.05em;color:#fff;">ABOUT ME</div>' +
+      '<div style="padding:12px 16px;font-size:12px;line-height:1.5;color:#4a3728;">' + about + '</div>' +
+      '<div style="background:#6b5344;padding:6px 14px;font-size:11px;font-weight:700;letter-spacing:0.05em;color:#fff;">EDUCATION</div>' +
+      '<div style="padding:12px 16px;font-size:12px;">' + eduItems + '</div>' +
+      '<div style="background:#6b5344;padding:6px 14px;font-size:11px;font-weight:700;letter-spacing:0.05em;color:#fff;">EXPERIENCE</div>' +
+      '<div style="padding:12px 16px;font-size:12px;">' + expItems + '</div>' +
+      '<div style="background:#6b5344;padding:6px 14px;font-size:11px;font-weight:700;letter-spacing:0.05em;color:#fff;">SKILLS</div>' +
+      '<div style="padding:12px 16px;">' + skillsUl + '</div>' +
+      '<div style="background:#6b5344;padding:6px 14px;font-size:11px;font-weight:700;letter-spacing:0.05em;color:#fff;">LANGUAGES</div>' +
+      '<div style="padding:12px 16px;font-size:12px;"><ul style="margin:6px 0 0 0;padding-left:18px;line-height:1.5;">' + langList.map(function (l) { return '<li>' + l + '</li>'; }).join('') + '</ul></div></div>';
   }
 
   return getCVTemplateHTML('black-white', data, photoDataUrl);
@@ -608,8 +670,7 @@ function generateCV() {
     document.getElementById('cvLoadingText').classList.add('hidden');
     document.getElementById('cvResult').classList.remove('hidden');
     document.getElementById('cvContent').innerHTML = html;
-    var saveBtn = document.getElementById('saveCvBtn');
-    if (saveBtn) saveBtn.disabled = false;
+    scheduleAccountAutoSave(300);
   }
   const photoInput = document.getElementById('photoInput');
   if (photoInput && photoInput.files && photoInput.files[0]) {
@@ -618,53 +679,6 @@ function generateCV() {
     reader.readAsDataURL(photoInput.files[0]);
   } else {
     finishCV(null);
-  }
-}
-
-async function saveCVToAccount() {
-  const btn = document.getElementById('saveCvBtn');
-  const originalText = btn ? btn.textContent : '';
-  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
-
-  try {
-    const client = window.getEasyjobSupabase && window.getEasyjobSupabase();
-    if (!client) throw new Error('Supabase is not initialized (check supabase-config.js).');
-
-    const { data: sessionData } = await client.auth.getSession();
-    const session = sessionData && sessionData.session;
-    if (!session) {
-      alert('Please sign in to save.');
-      window.location.href = 'login.html';
-      return;
-    }
-
-    const cvContent = document.getElementById('cvContent');
-    const html = cvContent ? cvContent.innerHTML : '';
-    if (!html || html.trim().length < 20) throw new Error('No CV content to save. Please generate your CV first.');
-
-    const draft = getDraftData();
-    const title = (draft && draft.jobTitle)
-      ? (draft.jobTitle + ' - ' + (draft.firstName || '') + ' ' + (draft.lastName || '')).trim()
-      : ('CV - ' + new Date().toISOString().slice(0, 10));
-
-    const payload = {
-      user_id: session.user.id,
-      title: title,
-      template: (draft && draft.template) ? String(draft.template) : (tmplFromUrl || ''),
-      content_html: html,
-      draft_json: draft
-    };
-
-    const { error } = await client.from('cv_documents').insert(payload);
-    if (error) throw error;
-
-    alert('Saved to your account!');
-    window.location.href = 'account.html';
-  } catch (e) {
-    console.error(e);
-    alert('Save failed: ' + (e && e.message ? e.message : 'Unknown error'));
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = originalText; }
   }
 }
 

@@ -56,6 +56,20 @@
           </p>
 
           <form id="signupForm" class="space-y-5">
+            <div>
+              <p class="text-sm font-semibold text-gray-700 mb-2">Account type</p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <label class="flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 cursor-pointer">
+                  <input type="radio" name="accountType" value="jobseeker" checked class="text-cyan-600 focus:ring-cyan-500">
+                  <span class="text-sm text-gray-700">Job seeker account</span>
+                </label>
+                <label class="flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 cursor-pointer">
+                  <input type="radio" name="accountType" value="business" class="text-cyan-600 focus:ring-cyan-500">
+                  <span class="text-sm text-gray-700">Business account (HR)</span>
+                </label>
+              </div>
+            </div>
+
             <!-- First name & Last name -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input type="text" id="firstName" placeholder="First name" required
@@ -152,6 +166,8 @@
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
       const confirmPassword = document.getElementById('confirmPassword').value;
+      const accountTypeEl = document.querySelector('input[name="accountType"]:checked');
+      const accountType = accountTypeEl ? accountTypeEl.value : 'jobseeker';
 
       if (password !== confirmPassword) {
         alert('Passwords do not match.');
@@ -173,7 +189,7 @@
           email,
           password,
           options: {
-            data: { first_name: firstName, last_name: lastName }
+            data: { first_name: firstName, last_name: lastName, account_type: accountType }
           }
         });
 
@@ -197,7 +213,8 @@
 
         // If email confirmation is enabled, user may need to verify email before login
         try {
-          localStorage.setItem('easyjob_name', (firstName + ' ' + lastName).trim() || email);
+          localStorage.setItem('easyjob_name', firstName || lastName || email);
+          localStorage.setItem('easyjob_account_type', accountType);
         } catch (_) {}
         alert('Sign up successful! If email confirmation is enabled, please verify via your inbox first.');
         window.location.href = 'login.html';

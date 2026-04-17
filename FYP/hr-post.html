@@ -5,12 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Post a Job - EASY Easy Job</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
   <link href="common.css" rel="stylesheet">
   <style>
     body { background: #f8fafc; }
-    .input-field { @apply w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-black transition-colors; }
-    .label-text { @apply block text-sm font-bold text-gray-700 mb-1; }
+    .input-field {
+      width: 100%;
+      border: 2px solid #e5e7eb;
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem;
+      transition: border-color 0.2s ease;
+      background: #fff;
+    }
+    .input-field:focus {
+      outline: none;
+      border-color: #111827;
+    }
+    .label-text {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: #374151;
+      margin-bottom: 0.25rem;
+    }
   </style>
 </head>
 <body class="bg-[#fafafa] text-neutral-900 antialiased min-h-screen flex flex-col">
@@ -45,7 +64,8 @@
 
   <!-- Main content -->
   <main class="site-main flex-1 container mx-auto px-6 py-12 max-w-3xl">
-    
+    <div id="businessGateBanner" class="hidden mb-8 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"></div>
+
     <div class="text-center mb-12">
       <h1 class="text-4xl font-black mb-4">Post a New Job</h1>
       <p class="text-gray-500 text-lg">Reach thousands of job seekers in Hong Kong.</p>
@@ -75,14 +95,14 @@
           <div>
             <label class="label-text">Category</label>
             <select name="category" class="input-field bg-white">
-              <option value="IT">Information Technology</option>
-              <option value="Marketing">Marketing & Media</option>
-              <option value="Admin">Admin & HR</option>
-              <option value="Sales">Sales & Business Dev</option>
-              <option value="Finance">Accounting & Finance</option>
-              <option value="Design">Design & Creative</option>
+              <option value="Technology &amp; IT">Information Technology</option>
+              <option value="Marketing &amp; Sales">Marketing &amp; Media</option>
+              <option value="Administration">Admin &amp; HR</option>
+              <option value="Marketing &amp; Sales">Sales &amp; Business Dev</option>
+              <option value="Finance &amp; Accounting">Accounting &amp; Finance</option>
+              <option value="Design &amp; Creative">Design &amp; Creative</option>
               <option value="Engineering">Engineering</option>
-              <option value="Service">Customer Service</option>
+              <option value="Other">Customer Service</option>
               <option value="Education">Education</option>
               <option value="Other">Other</option>
             </select>
@@ -140,8 +160,57 @@
   <script src="auth-ui.js"></script>
 
   <script>
+    async function ensureBusinessAccess() {
+      const banner = document.getElementById('businessGateBanner');
+      const form = document.getElementById('post-job-form');
+      const client = window.getEasyjobSupabase && window.getEasyjobSupabase();
+
+      if (!client) {
+        if (banner) {
+          banner.classList.remove('hidden');
+          banner.textContent = 'Supabase is not initialized. Please sign in again.';
+        }
+        if (form) form.style.display = 'none';
+        return false;
+      }
+
+      try {
+        const { data } = await client.auth.getSession();
+        const session = data && data.session;
+        if (!session || !session.user) {
+          window.location.href = 'login.html';
+          return false;
+        }
+        const meta = session.user.user_metadata || {};
+        const accountType = (meta.account_type || '').toString().toLowerCase();
+        localStorage.setItem('easyjob_account_type', accountType || 'jobseeker');
+        if (accountType !== 'business') {
+          if (banner) {
+            banner.classList.remove('hidden');
+            banner.textContent = 'Only Business accounts can access this page. Please sign up as a Business account.';
+          }
+          if (form) form.style.display = 'none';
+          return false;
+        }
+        return true;
+      } catch (err) {
+        if (banner) {
+          banner.classList.remove('hidden');
+          banner.textContent = 'Unable to verify account type. Please sign in again.';
+        }
+        if (form) form.style.display = 'none';
+        return false;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await ensureBusinessAccess();
+    });
+
     document.getElementById('post-job-form').addEventListener('submit', async (e) => {
         e.preventDefault();
+        const hasAccess = await ensureBusinessAccess();
+        if (!hasAccess) return;
         const btn = e.target.querySelector('button[type="submit"]');
         const originalText = btn.textContent;
         btn.textContent = 'Publishing...';

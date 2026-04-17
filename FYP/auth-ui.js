@@ -8,8 +8,20 @@
     try { localStorage.setItem('easyjob_name', (name || '').trim()); } catch (_) {}
   }
 
+  function getStoredAccountType() {
+    try { return (localStorage.getItem('easyjob_account_type') || '').trim().toLowerCase(); } catch (_) { return ''; }
+  }
+
+  function setStoredAccountType(type) {
+    try { localStorage.setItem('easyjob_account_type', (type || '').trim().toLowerCase()); } catch (_) {}
+  }
+
   function clearStoredName() {
     try { localStorage.removeItem('easyjob_name'); } catch (_) {}
+  }
+
+  function clearStoredAccountType() {
+    try { localStorage.removeItem('easyjob_account_type'); } catch (_) {}
   }
 
   function pickDisplayName(user) {
@@ -17,8 +29,7 @@
     var meta = user.user_metadata || {};
     var first = (meta.first_name || meta.firstName || '').trim();
     var last = (meta.last_name || meta.lastName || '').trim();
-    var full = (first + ' ' + last).trim();
-    return full || (user.email || '').trim();
+    return first || last || (user.email || '').trim();
   }
 
   function ensureLogoutButton(anchorEl) {
@@ -38,6 +49,7 @@
         // ignore
       } finally {
         clearStoredName();
+        clearStoredAccountType();
         window.location.href = 'index.html';
       }
     });
@@ -47,9 +59,10 @@
   function applyGreeting(name) {
     var el = document.getElementById('authLink');
     if (!el) return;
+    var accountType = getStoredAccountType();
     if (name) {
       el.textContent = 'Hi ' + name;
-      el.href = 'account.html';
+      el.href = accountType === 'business' ? 'hr-post.html' : 'account.html';
       el.classList.remove('hover:text-cyan-600');
       el.classList.add('text-cyan-700');
       el.classList.add('no-underline');
@@ -96,9 +109,13 @@
       var session = res && res.data ? res.data.session : null;
       if (session && session.user) {
         var name = pickDisplayName(session.user);
+        var meta = session.user.user_metadata || {};
+        var accountType = (meta.account_type || '').toString().toLowerCase();
         if (name) setStoredName(name);
+        if (accountType) setStoredAccountType(accountType);
         applyGreeting(name || getStoredName());
       } else {
+        clearStoredAccountType();
         applyGreeting('');
       }
     } catch (_) {

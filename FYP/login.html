@@ -117,6 +117,9 @@
       <p class="text-center mt-6 text-sm text-gray-600">
         New User? <a href="signup.html" class="text-cyan-600 font-semibold underline">SIGN UP HERE</a>
       </p>
+      <p class="text-center mt-2 text-xs text-gray-500">
+        Hiring team? <a href="signup.html" class="text-cyan-700 font-semibold underline">Create a Business account</a>
+      </p>
     </div>
   </div>
   </main>
@@ -180,10 +183,20 @@
           const meta = user?.user_metadata || {};
           const first = (meta.first_name || meta.firstName || '').trim();
           const last = (meta.last_name || meta.lastName || '').trim();
-          const name = (first + ' ' + last).trim() || (user?.email || email);
+          const accountType = (meta.account_type || 'jobseeker').toString().toLowerCase();
+          const name = first || last || (user?.email || email);
           localStorage.setItem('easyjob_name', name);
+          localStorage.setItem('easyjob_account_type', accountType);
         } catch (_) {}
         alert('Signed in!');
+        try {
+          const meta = data?.user?.user_metadata || {};
+          const accountType = (meta.account_type || 'jobseeker').toString().toLowerCase();
+          if (accountType === 'business') {
+            window.location.href = 'hr-post.html';
+            return;
+          }
+        } catch (_) {}
         window.location.href = 'index.html';
       } catch (err) {
         console.error(err);

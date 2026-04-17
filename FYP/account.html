@@ -286,26 +286,12 @@
             const one = await qrResp.json();
             if (one.error) return alert(one.error.message || 'Failed to load Job Quiz report.');
             const reportText = (one.report_text || '').trim();
-            const answers = one.answers_json || {};
-            const answersText = Object.entries(answers).map(([k, v]) => (k + ': ' + (v || ''))).join('\n');
-            const escapedReport = reportText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            const escapedAnswers = answersText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            openViewer({
-              title: 'Job Quiz Report',
-              meta: fmtDate(one.created_at) + (one.report_model ? (' · ' + one.report_model) : ''),
-              html:
-                '<div class="space-y-4">' +
-                  '<div class="rounded-xl border border-neutral-200 bg-white p-4">' +
-                    '<h4 class="font-semibold text-neutral-900 mb-2">Report</h4>' +
-                    '<pre class="whitespace-pre-wrap text-sm text-neutral-800 leading-relaxed">' + escapedReport + '</pre>' +
-                  '</div>' +
-                  '<div class="rounded-xl border border-neutral-200 bg-white p-4">' +
-                    '<h4 class="font-semibold text-neutral-900 mb-2">Answers</h4>' +
-                    '<pre class="whitespace-pre-wrap text-xs text-neutral-700 leading-relaxed">' + escapedAnswers + '</pre>' +
-                  '</div>' +
-                '</div>',
-              copyText: reportText + '\n\nAnswers\n' + answersText
-            });
+            if (!reportText) return alert('No report content found.');
+            localStorage.setItem('careerReport', reportText);
+            const win = window.open('report.html', '_blank', 'width=900,height=1000');
+            if (!win) {
+              window.location.href = 'report.html';
+            }
           }
         });
       });
