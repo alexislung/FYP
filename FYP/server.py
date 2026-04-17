@@ -177,6 +177,32 @@ def analyze_quiz():
         print(f"Quiz error: {e}")
         return jsonify({"error": {"message": str(e)}}), 500
 
+@app.route('/api/quiz/results', methods=['POST'])
+def save_quiz_result():
+    try:
+        data = request.json or {}
+        answers = data.get('answers') or {}
+        report_text = data.get('report_text')
+        report_model = data.get('report_model')
+        report_status = data.get('report_status') or 'completed'
+
+        if not isinstance(answers, dict) or not answers:
+            return jsonify({"error": {"message": "answers is required"}}), 400
+
+        result_id = database.save_quiz_result(
+            answers=answers,
+            report_text=report_text,
+            report_model=report_model,
+            report_status=report_status
+        )
+        if not result_id:
+            return jsonify({"error": {"message": "Failed to save quiz result"}}), 500
+
+        return jsonify({"status": "success", "id": result_id})
+    except Exception as e:
+        print(f"Save quiz result error: {e}")
+        return jsonify({"error": {"message": str(e)}}), 500
+
 @app.route('/job-search-images/<path:filename>')
 def serve_job_search_image(filename):
     for image_dir in JOB_SEARCH_IMAGE_DIRS:

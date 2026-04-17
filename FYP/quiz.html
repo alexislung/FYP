@@ -709,6 +709,23 @@
       return (typeof DEEPSEEK_API_KEY === 'string' && DEEPSEEK_API_KEY.trim()) || '';
     }
 
+    async function saveQuizResultToServer(payload) {
+      try {
+        const response = await fetch('/api/quiz/results', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+          throw new Error('HTTP ' + response.status);
+        }
+        return await response.json();
+      } catch (error) {
+        console.warn('Failed to save quiz result:', error);
+        return null;
+      }
+    }
+
     // Initialize quiz
     function initQuiz() {
       updateNavigation();
@@ -945,6 +962,18 @@
         
         // Store report for report.html
         localStorage.setItem('careerReport', careerReport);
+
+        // Save quiz answers + generated report to backend database
+        const savePayload = {
+          answers: quizData,
+          report_text: careerReport,
+          report_model: DEEPSEEK_MODEL,
+          report_status: 'completed'
+        };
+        const savedResult = await saveQuizResultToServer(savePayload);
+        if (savedResult && savedResult.id) {
+          localStorage.setItem('quizResultId', String(savedResult.id));
+        }
         
         // Show success message and open report in new window
         document.getElementById('resultContent').innerHTML = 

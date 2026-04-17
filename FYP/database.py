@@ -3,6 +3,7 @@ from psycopg2.extras import RealDictCursor
 import datetime
 import os
 import re
+import json
 
 # 数据库连接配置 (Supabase Connection Pooler)
 DB_HOST = "aws-1-ap-southeast-1.pooler.supabase.com"
@@ -252,6 +253,51 @@ def apply_for_job(job_id, name, email, message):
 
 # 每次启动时尝试初始化新表
 init_application_table()
+
+def init_quiz_results_table():
+    try:
+        conn = get_db_connection()
+        if conn is None: return
+        c = conn.cursor()
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS quiz_results (
+                id SERIAL PRIMARY KEY,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                answers_json JSONB NOT NULL,
+                report_text TEXT,
+                report_model TEXT,
+                report_status TEXT DEFAULT 'completed'
+            );
+        """)
+        conn.commit()
+        conn.close()
+        print("✅ Table 'quiz_results' ensured.")
+    except Exception as e:
+        print(f"⚠️ Init quiz results table failed: {e}")
+
+def save_quiz_result(answers, report_text=None, report_model=None, report_status='completed'):
+    try:
+        conn = get_db_connection()
+        if conn is None: return None
+        c = conn.cursor()
+        answers_payload = json.dumps(answers or {})
+        c.execute(
+            """
+            INSERT INTO quiz_results (answers_json, report_text, report_model, report_status)
+            VALUES (%s::jsonb, %s, %s, %s)
+            RETURNING id
+            """,
+            (answers_payload, report_text, report_model, report_status)
+        )
+        new_id = c.fetchone()[0]
+        conn.commit()
+        conn.close()
+        return new_id
+    except Exception as e:
+        print(f"⚠️ Save quiz result failed: {e}")
+        return None
+
+init_quiz_results_table()
 
 # --- 新增：HR 发布职位 ---
 def create_job(title, company, salary, category, location, requirements):
