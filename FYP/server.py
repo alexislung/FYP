@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, Response, stream_with_context, send_from_directory
+from flask import Flask, request, jsonify, Response, stream_with_context, send_from_directory, abort
 from flask_cors import CORS
 import requests
 import json
@@ -14,7 +14,10 @@ CORS(app)  # Enable CORS for all routes
 API_KEY = "sk-e66576b892ea490599f0a5c366611858"
 TARGET_URL = "https://api.deepseek.com/chat/completions"
 PORT = int(os.environ.get("PORT", 8000))
-JOB_SEARCH_IMAGE_DIR = os.path.abspath(os.path.join(app.root_path, "..", "Job Search"))
+JOB_SEARCH_IMAGE_DIRS = [
+    os.path.abspath(os.path.join(app.root_path, "..", "Job Search")),
+    os.path.abspath(os.path.join(app.root_path, "..", "..", "Job Search")),
+]
 
 @app.route('/')
 def serve_index():
@@ -176,7 +179,11 @@ def analyze_quiz():
 
 @app.route('/job-search-images/<path:filename>')
 def serve_job_search_image(filename):
-    return send_from_directory(JOB_SEARCH_IMAGE_DIR, filename)
+    for image_dir in JOB_SEARCH_IMAGE_DIRS:
+        file_path = os.path.abspath(os.path.join(image_dir, filename))
+        if os.path.isfile(file_path):
+            return send_from_directory(image_dir, filename)
+    return abort(404)
 
 @app.route('/<path:path>')
 def serve_static(path):
