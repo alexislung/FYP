@@ -203,6 +203,31 @@ def save_quiz_result():
         print(f"Save quiz result error: {e}")
         return jsonify({"error": {"message": str(e)}}), 500
 
+@app.route('/api/quiz/results', methods=['GET'])
+def list_quiz_results():
+    try:
+        limit = request.args.get('limit', default=20, type=int)
+        if limit <= 0:
+            limit = 20
+        if limit > 100:
+            limit = 100
+        rows = database.get_quiz_results(limit=limit)
+        return jsonify(rows)
+    except Exception as e:
+        print(f"List quiz results error: {e}")
+        return jsonify({"error": {"message": str(e)}}), 500
+
+@app.route('/api/quiz/results/<int:result_id>', methods=['GET'])
+def get_quiz_result(result_id):
+    try:
+        row = database.get_quiz_result_by_id(result_id)
+        if not row:
+            return jsonify({"error": {"message": "Quiz result not found"}}), 404
+        return jsonify(row)
+    except Exception as e:
+        print(f"Get quiz result error: {e}")
+        return jsonify({"error": {"message": str(e)}}), 500
+
 @app.route('/job-search-images/<path:filename>')
 def serve_job_search_image(filename):
     for image_dir in JOB_SEARCH_IMAGE_DIRS:

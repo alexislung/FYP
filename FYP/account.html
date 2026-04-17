@@ -45,7 +45,7 @@
       <div>
         <p class="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-600">Account</p>
         <h1 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight text-neutral-950">Your saved content</h1>
-        <p class="mt-2 text-sm text-neutral-500">View the CVs and cover letters you saved.</p>
+        <p class="mt-2 text-sm text-neutral-500">View the CVs, cover letters, and Job Quiz reports you saved.</p>
       </div>
       <div class="flex gap-2">
         <a href="cv-template.html" class="inline-flex items-center justify-center rounded-full border border-neutral-200 bg-white px-5 py-2.5 text-sm font-semibold text-neutral-800 hover:bg-neutral-50 transition">Create a CV</a>
@@ -70,6 +70,16 @@
           <p class="text-sm text-neutral-500 mt-1">Cover letters you generated and saved.</p>
         </div>
         <div id="clList" class="p-6 space-y-4">
+          <div class="text-sm text-neutral-500">Loading...</div>
+        </div>
+      </section>
+
+      <section class="rounded-2xl border border-neutral-200 bg-white shadow-sm lg:col-span-2">
+        <div class="p-6 border-b border-neutral-200">
+          <h2 class="text-lg font-bold">Saved Job Quiz Reports</h2>
+          <p class="text-sm text-neutral-500 mt-1">Quiz reports generated after submitting JOB Quiz.</p>
+        </div>
+        <div id="qrList" class="p-6 space-y-4">
           <div class="text-sm text-neutral-500">Loading...</div>
         </div>
       </section>
@@ -153,7 +163,7 @@
     }
 
     function renderListItem(kind, row) {
-      const title = row.title || (kind === 'cv' ? 'CV' : 'Cover Letter');
+      const title = row.title || (kind === 'cv' ? 'CV' : (kind === 'cl' ? 'Cover Letter' : 'Job Quiz Report'));
       const when = fmtDate(row.created_at);
       const id = row.id;
       return `
@@ -192,6 +202,7 @@
 
       const cvList = document.getElementById('cvList');
       const clList = document.getElementById('clList');
+      const qrList = document.getElementById('qrList');
 
       // CV
       const cvRes = await client
@@ -221,6 +232,29 @@
         clList.innerHTML = clRes.data.map((r) => renderListItem('cl', r)).join('');
       }
 
+      // Quiz reports (saved via backend API)
+      try {
+        const qrResp = await fetch('/api/quiz/results?limit=20');
+        if (!qrResp.ok) {
+          throw new Error('HTTP ' + qrResp.status);
+        }
+        const qrData = await qrResp.json();
+        if (!Array.isArray(qrData) || qrData.length === 0) {
+          renderEmpty(qrList, 'You have not saved any Job Quiz reports yet.');
+        } else {
+          qrList.innerHTML = qrData.map((r) => {
+            const row = {
+              id: r.id,
+              created_at: r.created_at,
+              title: (r.report_model ? ('Job Quiz Report · ' + r.report_model) : 'Job Quiz Report')
+            };
+            return renderListItem('qr', row);
+          }).join('');
+        }
+      } catch (err) {
+        renderEmpty(qrList, 'Failed to load quiz reports: ' + (err.message || err));
+      }
+
       document.querySelectorAll('.view-btn').forEach((btn) => {
         btn.addEventListener('click', async () => {
           const kind = btn.getAttribute('data-kind');
@@ -236,7 +270,7 @@
               html: '<div class="rounded-xl border border-neutral-200 bg-white p-4 overflow-auto">' + (one.data.content_html || '') + '</div>',
               copyText: one.data.content_html || ''
             });
-          } else {
+          } else if (kind === 'cl') {
             const one = await client.from('cover_letters').select('title, created_at, content_text').eq('id', id).single();
             if (one.error) return alert(one.error.message);
             const text = one.data.content_text || '';
@@ -245,6 +279,32 @@
               meta: fmtDate(one.data.created_at),
               html: '<pre class="whitespace-pre-wrap text-sm text-neutral-800 leading-relaxed rounded-xl border border-neutral-200 bg-white p-4">' + (text.replace(/</g,'&lt;').replace(/>/g,'&gt;')) + '</pre>',
               copyText: text
+            });
+          } else if (kind === 'qr') {
+            const qrResp = await fetch('/api/quiz/results/' + encodeURIComponent(id));
+            if (!qrResp.ok) return alert('Failed to load Job Quiz report.');
+            const one = await qrResp.json();
+            if (one.error) return alert(one.error.message || 'Failed to load Job Quiz report.');
+            const reportText = (one.report_text || '').trim();
+            const answers = one.answers_json || {};
+            const answersText = Object.entries(answers).map(([k, v]) => (k + ': ' + (v || ''))).join('\n');
+            const escapedReport = reportText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const escapedAnswers = answersText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            openViewer({
+              title: 'Job Quiz Report',
+              meta: fmtDate(one.created_at) + (one.report_model ? (' · ' + one.report_model) : ''),
+              html:
+                '<div class="space-y-4">' +
+                  '<div class="rounded-xl border border-neutral-200 bg-white p-4">' +
+                    '<h4 class="font-semibold text-neutral-900 mb-2">Report</h4>' +
+                    '<pre class="whitespace-pre-wrap text-sm text-neutral-800 leading-relaxed">' + escapedReport + '</pre>' +
+                  '</div>' +
+                  '<div class="rounded-xl border border-neutral-200 bg-white p-4">' +
+                    '<h4 class="font-semibold text-neutral-900 mb-2">Answers</h4>' +
+                    '<pre class="whitespace-pre-wrap text-xs text-neutral-700 leading-relaxed">' + escapedAnswers + '</pre>' +
+                  '</div>' +
+                '</div>',
+              copyText: reportText + '\n\nAnswers\n' + answersText
             });
           }
         });

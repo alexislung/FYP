@@ -297,6 +297,58 @@ def save_quiz_result(answers, report_text=None, report_model=None, report_status
         print(f"⚠️ Save quiz result failed: {e}")
         return None
 
+def get_quiz_results(limit=20):
+    try:
+        conn = get_db_connection()
+        if conn is None: return []
+        c = conn.cursor(cursor_factory=RealDictCursor)
+        c.execute(
+            """
+            SELECT id, created_at, report_model, report_status, report_text
+            FROM quiz_results
+            ORDER BY created_at DESC
+            LIMIT %s
+            """,
+            (limit,)
+        )
+        rows = c.fetchall()
+        conn.close()
+        result = []
+        for row in rows:
+            row_dict = dict(row)
+            if row_dict.get('created_at'):
+                row_dict['created_at'] = row_dict['created_at'].isoformat()
+            result.append(row_dict)
+        return result
+    except Exception as e:
+        print(f"⚠️ Get quiz results failed: {e}")
+        return []
+
+def get_quiz_result_by_id(result_id):
+    try:
+        conn = get_db_connection()
+        if conn is None: return None
+        c = conn.cursor(cursor_factory=RealDictCursor)
+        c.execute(
+            """
+            SELECT id, created_at, answers_json, report_text, report_model, report_status
+            FROM quiz_results
+            WHERE id = %s
+            """,
+            (result_id,)
+        )
+        row = c.fetchone()
+        conn.close()
+        if not row:
+            return None
+        result = dict(row)
+        if result.get('created_at'):
+            result['created_at'] = result['created_at'].isoformat()
+        return result
+    except Exception as e:
+        print(f"⚠️ Get quiz result by id failed: {e}")
+        return None
+
 init_quiz_results_table()
 
 # --- 新增：HR 发布职位 ---
