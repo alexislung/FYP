@@ -1,10 +1,4 @@
-"""
-PostgreSQL for EasyJob.
 
-Supabase「Direct」連線 (db.*.supabase.co:5432) 官方標示為 **Not IPv4 compatible**：
-在一般家用 IPv4 網路請改用 Dashboard → **Connect → Session pooler**（或 Transaction :6543）
-複製整條 URI 到 _DEFAULT_DATABASE_URL。可另用環境變數 DATABASE_URL / .env。
-"""
 import datetime
 import json
 import os
