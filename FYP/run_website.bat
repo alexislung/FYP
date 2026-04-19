@@ -4,9 +4,8 @@ cd /d "%~dp0"
 
 echo.
 echo === EasyJob server ===
-echo Edit database.py: _DEFAULT_DATABASE_URL
-echo Edit server.py:    _DEFAULT_DEEPSEEK_API_KEY
-echo Or use .env / Windows environment variables (they override the defaults above).
+echo Database: edit database.py _DEFAULT_DATABASE_URL (or set DATABASE_URL).
+echo DeepSeek: edit server.py _DEFAULT_DEEPSEEK_API_KEY (or set DEEPSEEK_API_KEY).
 echo.
 echo Starting web server...
 start "" "http://127.0.0.1:8000/index.html"
