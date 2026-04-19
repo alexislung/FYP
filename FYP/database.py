@@ -4,6 +4,9 @@ import os
 import re
 import json
 import traceback
+import datetime
+import uuid
+from decimal import Decimal
 from pathlib import Path
 
 try:
@@ -19,8 +22,28 @@ except ImportError:
 
 # Paste your Supabase URI here if you do not use .env / system env.
 # If the password contains # use triple quotes: """postgresql://..."""
-_DEFAULT_DATABASE_URL = """postgresql://postgres:[asdfg1234!@#$%^&&&&&]@db.ylpzdegpjbkrhfbqcbvc.supabase.co:5432/postgres"
+_DEFAULT_DATABASE_URL = """postgresql://postgres:[asdfg1234!@#$%^&&&&&]@db.ylpzdegpjbkrhfbqcbvc.supabase.co:5432/postgres"""
 _DEFAULT_DB_SSL_MODE = ""
+
+
+def sanitize_row_for_json(row):
+    if row is None:
+        return None
+    out = {}
+    for k, v in dict(row).items():
+        if isinstance(v, datetime.datetime):
+            out[k] = v.isoformat()
+        elif isinstance(v, datetime.date):
+            out[k] = v.isoformat()
+        elif isinstance(v, Decimal):
+            out[k] = float(v)
+        elif isinstance(v, uuid.UUID):
+            out[k] = str(v)
+        elif isinstance(v, (bytes, memoryview)):
+            out[k] = bytes(v).decode("utf-8", errors="replace")
+        else:
+            out[k] = v
+    return out
 
 DB_HOST = os.environ.get("DB_HOST", "").strip()
 DB_NAME = os.environ.get("DB_NAME", "").strip()
@@ -271,7 +294,7 @@ def get_jobs(limit=50, q=None, location=None, min_salary=None, category=None, jo
                     if eff_max_k is not None and low is not None and low > eff_max_k:
                         continue
 
-            result.append(job)
+            result.append(sanitize_row_for_json(job))
             
         return result
     except Exception as e:
@@ -363,7 +386,7 @@ def get_job_by_id(job_id):
         c.execute("SELECT * FROM jobs WHERE id = %s", (job_id,))
         row = c.fetchone()
         conn.close()
-        return dict(row) if row else None
+        return sanitize_row_for_json(row) if row else None
     except Exception as e:
         print(f"Get job by id failed: {e}")
         return None
@@ -468,10 +491,7 @@ def get_quiz_results(limit=20):
         conn.close()
         result = []
         for row in rows:
-            row_dict = dict(row)
-            if row_dict.get('created_at'):
-                row_dict['created_at'] = row_dict['created_at'].isoformat()
-            result.append(row_dict)
+            result.append(sanitize_row_for_json(row))
         return result
     except Exception as e:
         print(f"Get quiz results failed: {e}")
@@ -494,10 +514,7 @@ def get_quiz_result_by_id(result_id):
         conn.close()
         if not row:
             return None
-        result = dict(row)
-        if result.get('created_at'):
-            result['created_at'] = result['created_at'].isoformat()
-        return result
+        return sanitize_row_for_json(row)
     except Exception as e:
         print(f"Get quiz result by id failed: {e}")
         return None
