@@ -5,7 +5,7 @@ cd /d "%~dp0"
 echo.
 echo === EasyJob server ===
 echo Folder: %CD%
-echo Database: edit database.py _DEFAULT_DATABASE_URL (pooler port 6543 if direct 5432 / IPv6 fails).
+echo Database: Supabase Connect - use Session pooler URI on IPv4; or port 6543 - paste into database.py.
 echo DeepSeek: edit server.py _DEFAULT_DEEPSEEK_API_KEY (or set DEEPSEEK_API_KEY).
 echo.
 echo Installing Python packages from this folder (requirements.txt)...

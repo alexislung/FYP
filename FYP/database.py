@@ -1,6 +1,9 @@
 """
-PostgreSQL for EasyJob — set DATABASE_URL or paste URI in _DEFAULT_DATABASE_URL below.
-DNS fallback (dnspython + public DNS) when router DNS fails. Optional: .env
+PostgreSQL for EasyJob.
+
+Supabase「Direct」連線 (db.*.supabase.co:5432) 官方標示為 **Not IPv4 compatible**：
+在一般家用 IPv4 網路請改用 Dashboard → **Connect → Session pooler**（或 Transaction :6543）
+複製整條 URI 到 _DEFAULT_DATABASE_URL。可另用環境變數 DATABASE_URL / .env。
 """
 import datetime
 import json
@@ -10,7 +13,7 @@ import traceback
 import uuid
 from decimal import Decimal
 from pathlib import Path
-from urllib.parse import quote_plus, urlparse, unquote
+from urllib.parse import quote_plus, urlparse, unquote, urlunparse
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -24,10 +27,8 @@ try:
 except ImportError:
     pass
 
-# Paste full URI from Supabase (Settings → Database → Connection string → URI).
-# If password has @ # : / ? encode it (e.g. @ → %40). Prefer Transaction pooler (6543) if direct fails.
 _DEFAULT_DATABASE_URL = (
-    "postgresql://postgres:iSPF6SzvdgUtE1M7@db.ylpzdegpjbkrhfbqcbvc.supabase.co:5432/postgres"
+    "postgresql://postgres.ylpzdegpjbkrhfbqcbvc:iSPF6SzvdgUtE1M7@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
 )
 _DEFAULT_DB_SSL_MODE = "require"
 
@@ -77,6 +78,28 @@ def sanitize_row_for_json(row):
         else:
             out[k] = v
     return out
+
+
+def _supabase_try_transaction_port(url):
+    """Same host as direct, port 6543 — Supabase transaction pooler (IPv4-friendly)."""
+    try:
+        u = urlparse(url)
+        if not u.hostname or "supabase.co" not in u.hostname:
+            return None
+        if not u.hostname.startswith("db."):
+            return None
+        if (u.port or 5432) != 5432:
+            return None
+        auth = ""
+        if u.username:
+            auth = quote_plus(u.username)
+            if u.password is not None:
+                auth += ":" + quote_plus(u.password)
+            auth += "@"
+        netloc = f"{auth}{u.hostname}:6543"
+        return urlunparse((u.scheme or "postgresql", netloc, u.path or "/postgres", "", "", ""))
+    except Exception:
+        return None
 
 
 def _is_dns_resolution_error(err):
@@ -163,6 +186,24 @@ def _connect_hostaddr(db_url, sslm, timeout_s):
     return None
 
 
+def _connect_url_attempt(url, ssl_modes, timeout_s):
+    last_err = None
+    for sslm in ssl_modes:
+        try:
+            conn = psycopg2.connect(url, sslmode=sslm, connect_timeout=timeout_s)
+            return conn, None
+        except Exception as e:
+            last_err = e
+    if last_err and _is_dns_resolution_error(last_err):
+        print("Database: using public DNS (8.8.8.8) + hostaddr…")
+        for sslm in ssl_modes:
+            c = _connect_hostaddr(url, sslm, timeout_s)
+            if c:
+                print("Database: connected (hostaddr fallback)")
+                return c, None
+    return None, last_err
+
+
 def get_db_connection():
     if not DB_URL:
         print("Database: no URL — set DATABASE_URL or _DEFAULT_DATABASE_URL in database.py")
@@ -176,21 +217,28 @@ def get_db_connection():
         m = (m or "").strip()
         if m and m not in ssl_modes:
             ssl_modes.append(m)
-    last_err = None
-    for sslm in ssl_modes:
-        try:
-            conn = psycopg2.connect(DB_URL, sslmode=sslm, connect_timeout=timeout_s)
+
+    conn, last_err = _connect_url_attempt(DB_URL, ssl_modes, timeout_s)
+    if conn:
+        return conn
+
+    alt = _supabase_try_transaction_port(DB_URL)
+    if alt and alt != DB_URL:
+        print("Database: retrying with Supabase transaction pooler (port 6543)…")
+        conn, err2 = _connect_url_attempt(alt, ssl_modes, timeout_s)
+        if conn:
+            print("Database: connected on port 6543")
             return conn
-        except Exception as e:
-            last_err = e
-    if last_err and _is_dns_resolution_error(last_err):
-        print("Database: using public DNS (8.8.8.8) + hostaddr…")
-        for sslm in ssl_modes:
-            c = _connect_hostaddr(DB_URL, sslm, timeout_s)
-            if c:
-                print("Database: connected (hostaddr fallback)")
-                return c
+        if err2:
+            last_err = err2
+
     if last_err is not None:
+        low = str(last_err).lower()
+        if "network is unreachable" in low or "無法識別" in str(last_err) or _is_dns_resolution_error(last_err):
+            print(
+                "Database: Supabase `db.*` 在你網路上常只有 IPv6。請到後台 Project → Connect → "
+                "「Session pooler」複製整條 URI（aws-0-…區域要與專案一致），貼到 database.py 的 _DEFAULT_DATABASE_URL。"
+            )
         print("Database connection failed:", last_err)
         traceback.print_exc()
     else:

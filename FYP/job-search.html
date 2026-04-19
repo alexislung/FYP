@@ -550,7 +550,7 @@
       } catch (e) {
         console.error(e);
         var msg = (e && e.message) ? String(e.message) : 'Request failed';
-        if (grid) grid.innerHTML = '<div class="col-span-full text-center text-red-500">' + msg + '</div><p class="col-span-full text-center text-sm text-gray-500 mt-2">Tip: update <code class="bg-gray-100 px-1 rounded">database.py</code> <code class="bg-gray-100 px-1 rounded">_DEFAULT_DATABASE_URL</code> with the current Supabase URI (try Transaction pooler port 6543 if 5432 fails). Restart <code class="bg-gray-100 px-1 rounded">run_website.bat</code> and read the server window.</p>';
+        if (grid) grid.innerHTML = '<div class="col-span-full text-center text-red-500">' + msg + '</div><p class="col-span-full text-center text-sm text-gray-500 mt-2">Tip: Supabase → Connect → copy <strong>Session pooler</strong> URI (IPv4) or <strong>Transaction</strong> on port 6543; paste into <code class="bg-gray-100 px-1 rounded">database.py</code> <code class="bg-gray-100 px-1 rounded">_DEFAULT_DATABASE_URL</code>. Restart <code class="bg-gray-100 px-1 rounded">run_website.bat</code>.</p>';
         if (meta) meta.textContent = '';
       } finally {
         if (btn) { btn.disabled = false; btn.textContent = 'Search'; }

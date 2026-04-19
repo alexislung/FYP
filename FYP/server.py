@@ -71,7 +71,7 @@ def get_jobs():
                     {
                         "error": {
                             "code": "DB_CONNECT_FAILED",
-                            "message": "Cannot connect to PostgreSQL. Check URL in database.py and network.",
+                            "message": "Cannot connect to PostgreSQL. In Supabase use Connect → Session pooler URI or port 6543; paste into database.py.",
                         }
                     }
                 ),
