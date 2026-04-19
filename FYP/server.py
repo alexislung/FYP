@@ -12,6 +12,11 @@ try:
 except ImportError:
     pass
 
+# Paste your DeepSeek key here if you do not use .env / system env.
+_DEFAULT_DEEPSEEK_API_KEY = "sk-c86c1b5ec1a24631a7aa6b6597debcb6"
+_DEFAULT_ALLOWED_ORIGINS = ""
+_DEFAULT_QUIZ_WEBHOOK = ""
+
 from flask import Flask, request, jsonify, Response, stream_with_context, send_from_directory, abort
 from flask_cors import CORS
 import requests
@@ -19,19 +24,9 @@ import json
 import socket
 import database
 
-try:
-    import local_keys as _local_keys
-    _lk_deepseek = (getattr(_local_keys, "DEEPSEEK_API_KEY", None) or "").strip()
-    _lk_origins = (getattr(_local_keys, "ALLOWED_ORIGINS", None) or "").strip()
-    _lk_quiz_webhook = (getattr(_local_keys, "QUIZ_ANALYZE_WEBHOOK_URL", None) or "").strip()
-except ImportError:
-    _lk_deepseek = ""
-    _lk_origins = ""
-    _lk_quiz_webhook = ""
-
 app = Flask(__name__, static_url_path='', static_folder='.')
 
-_origins_csv = (os.environ.get("ALLOWED_ORIGINS", "") or "").strip() or _lk_origins
+_origins_csv = (os.environ.get("ALLOWED_ORIGINS", "") or "").strip() or (_DEFAULT_ALLOWED_ORIGINS or "").strip()
 configured_origins = [
     origin.strip()
     for origin in _origins_csv.split(",")
@@ -46,9 +41,9 @@ CORS(
     resources={r"/api/*": {"origins": configured_origins or default_dev_origins}}
 )
 
-API_KEY = (os.environ.get("DEEPSEEK_API_KEY", "") or "").strip() or _lk_deepseek
+API_KEY = (os.environ.get("DEEPSEEK_API_KEY", "") or "").strip() or (_DEFAULT_DEEPSEEK_API_KEY or "").strip()
 TARGET_URL = "https://api.deepseek.com/chat/completions"
-QUIZ_ANALYZE_WEBHOOK_URL = (os.environ.get("QUIZ_ANALYZE_WEBHOOK_URL", "") or "").strip() or _lk_quiz_webhook
+QUIZ_ANALYZE_WEBHOOK_URL = (os.environ.get("QUIZ_ANALYZE_WEBHOOK_URL", "") or "").strip() or (_DEFAULT_QUIZ_WEBHOOK or "").strip()
 PORT = int(os.environ.get("PORT", 8000))
 JOB_SEARCH_IMAGE_DIRS = [
     os.path.abspath(os.path.join(app.root_path, "..", "Job Search")),

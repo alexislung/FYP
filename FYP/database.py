@@ -17,6 +17,11 @@ try:
 except ImportError:
     pass
 
+# Paste your Supabase URI here if you do not use .env / system env.
+# If the password contains # use triple quotes: """postgresql://..."""
+_DEFAULT_DATABASE_URL = """postgresql://postgres:[asdfg1234!@#$%^&&&&&]@db.ylpzdegpjbkrhfbqcbvc.supabase.co:5432/postgres"
+_DEFAULT_DB_SSL_MODE = ""
+
 DB_HOST = os.environ.get("DB_HOST", "").strip()
 DB_NAME = os.environ.get("DB_NAME", "").strip()
 DB_USER = os.environ.get("DB_USER", "").strip()
@@ -28,18 +33,11 @@ DB_SSL_MODE = (os.environ.get("DB_SSL_MODE", "require") or "require").strip()
 if not DB_URL and all([DB_HOST, DB_NAME, DB_USER, DB_PASS, DB_PORT]):
     DB_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
-try:
-    import local_keys as _local_keys
-    if not DB_URL:
-        _lu = getattr(_local_keys, "DATABASE_URL", None)
-        if _lu and str(_lu).strip():
-            DB_URL = str(_lu).strip()
-    if not os.environ.get("DB_SSL_MODE", "").strip():
-        _ls = getattr(_local_keys, "DB_SSL_MODE", None)
-        if _ls and str(_ls).strip():
-            DB_SSL_MODE = str(_ls).strip()
-except ImportError:
-    pass
+if not (DB_URL or "").strip() and (_DEFAULT_DATABASE_URL or "").strip():
+    DB_URL = (_DEFAULT_DATABASE_URL or "").strip()
+
+if not os.environ.get("DB_SSL_MODE", "").strip() and (_DEFAULT_DB_SSL_MODE or "").strip():
+    DB_SSL_MODE = (_DEFAULT_DB_SSL_MODE or "").strip()
 
 def get_db_connection():
     try:

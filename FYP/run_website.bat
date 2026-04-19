@@ -2,27 +2,18 @@
 title EasyJob Server
 cd /d "%~dp0"
 
-if exist ".env" goto startpy
-if exist "local_keys.py" goto startpy
-if not "%EASYJOB_ENV_FILE%"=="" if exist "%EASYJOB_ENV_FILE%" goto startpy
-
-if "%DEEPSEEK_API_KEY%"=="" (
-  echo [ERROR] Missing DEEPSEEK_API_KEY.
-  echo Fix: copy .env.example to .env and fill in values, OR run set_env.bat then open a NEW cmd window.
-  pause
-  exit /b 1
-)
-
-if "%DATABASE_URL%"=="" (
-  echo [ERROR] Missing DATABASE_URL.
-  echo Fix: copy .env.example to .env and set DATABASE_URL=postgresql://..., OR run set_env.bat then open a NEW cmd window.
-  pause
-  exit /b 1
-)
-
-:startpy
-
+echo.
+echo === EasyJob server ===
+echo Edit database.py: _DEFAULT_DATABASE_URL
+echo Edit server.py:    _DEFAULT_DEEPSEEK_API_KEY
+echo Or use .env / Windows environment variables (they override the defaults above).
+echo.
 echo Starting web server...
 start "" "http://127.0.0.1:8000/index.html"
 python server.py
+if errorlevel 1 (
+  echo.
+  echo [ERROR] Python exited with an error. Read the messages above.
+)
+echo.
 pause

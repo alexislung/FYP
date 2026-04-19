@@ -1,5 +1,4 @@
 .env
 .env.local
-local_keys.py
 *.pyc
 __pycache__/
