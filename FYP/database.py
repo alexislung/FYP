@@ -4,6 +4,13 @@ import os
 import re
 import json
 import traceback
+from pathlib import Path
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).resolve().parent / ".env", override=False)
+except ImportError:
+    pass
 
 DB_HOST = os.environ.get("DB_HOST", "").strip()
 DB_NAME = os.environ.get("DB_NAME", "").strip()

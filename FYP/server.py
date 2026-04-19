@@ -1,3 +1,11 @@
+from pathlib import Path
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).resolve().parent / ".env", override=False)
+except ImportError:
+    pass
+
 from flask import Flask, request, jsonify, Response, stream_with_context, send_from_directory, abort
 from flask_cors import CORS
 import requests
