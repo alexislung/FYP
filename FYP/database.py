@@ -8,6 +8,7 @@ import datetime
 import uuid
 from decimal import Decimal
 from pathlib import Path
+from urllib.parse import quote_plus
 
 try:
     from dotenv import load_dotenv
@@ -20,10 +21,11 @@ try:
 except ImportError:
     pass
 
-# Paste your Supabase URI here if you do not use .env / system env.
-# If the password contains # use triple quotes: """postgresql://..."""
-_DEFAULT_DATABASE_URL = """postgresql://postgres:[asdfg1234!@#$%^&&&&&]@db.ylpzdegpjbkrhfbqcbvc.supabase.co:5432/postgres"""
-_DEFAULT_DB_SSL_MODE = ""
+# Paste full URI from Supabase (Settings → Database → Connection string → URI).
+# Do NOT keep square brackets around the password unless they are literally in your password.
+# If password contains @ # : / ? encode it, e.g. @ → %40, or build URL with split vars below.
+_DEFAULT_DATABASE_URL = "postgresql://postgres:iSPF6SzvdgUtE1M7@db.ylpzdegpjbkrhfbqcbvc.supabase.co:5432/postgres"
+_DEFAULT_DB_SSL_MODE = "prefer"
 
 
 def sanitize_row_for_json(row):
@@ -51,10 +53,10 @@ DB_USER = os.environ.get("DB_USER", "").strip()
 DB_PASS = os.environ.get("DB_PASS", "").strip()
 DB_PORT = os.environ.get("DB_PORT", "").strip()
 DB_URL = os.environ.get("DATABASE_URL", "").strip()
-DB_SSL_MODE = (os.environ.get("DB_SSL_MODE", "require") or "require").strip()
+DB_SSL_MODE = (os.environ.get("DB_SSL_MODE", "prefer") or "prefer").strip()
 
 if not DB_URL and all([DB_HOST, DB_NAME, DB_USER, DB_PASS, DB_PORT]):
-    DB_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    DB_URL = f"postgresql://{quote_plus(DB_USER)}:{quote_plus(DB_PASS)}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 if not (DB_URL or "").strip() and (_DEFAULT_DATABASE_URL or "").strip():
     DB_URL = (_DEFAULT_DATABASE_URL or "").strip()
