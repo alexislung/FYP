@@ -1,11 +1,9 @@
 import psycopg2
 from psycopg2.extras import RealDictCursor
-import datetime
 import os
 import re
 import json
 
-# 数据库连接配置
 DB_HOST = os.environ.get("DB_HOST", "").strip()
 DB_NAME = os.environ.get("DB_NAME", "").strip()
 DB_USER = os.environ.get("DB_USER", "").strip()
@@ -20,20 +18,18 @@ if not DB_URL and all([DB_HOST, DB_NAME, DB_USER, DB_PASS, DB_PORT]):
 def get_db_connection():
     try:
         if not DB_URL:
-            print("❌ Database connection failed: DATABASE_URL is not configured")
+            print("Database connection failed: DATABASE_URL is not configured")
             return None
         conn = psycopg2.connect(DB_URL, sslmode=DB_SSL_MODE)
         return conn
     except Exception as e:
-        print(f"❌ Database connection failed: {e}")
+        print(f"Database connection failed: {e}")
         return None
 
 def init_db():
-    """初始化数据库表"""
-    print("🔄 Connecting to Supabase...")
     conn = get_db_connection()
     if conn:
-        print("✅ Connected successfully")
+        print("Database connection OK")
         conn.close()
 
 def _extract_salary_k_range(text):
@@ -74,25 +70,21 @@ def _match_job_type(job, selected_types):
             return True
     return False
 
-# --- Get job list (supports search) ---
 def get_jobs(limit=50, q=None, location=None, min_salary=None, category=None, job_types=None, min_k=None, max_k=None, posted_days=None):
     try:
         conn = get_db_connection()
         if conn is None: return []
         
-        # Base query
         query = "SELECT * FROM jobs WHERE 1=1"
         params = []
         
-        # Dynamic filters
         if q and q.strip():
-            # Search across common fields
             query += " AND (title ILIKE %s OR company ILIKE %s OR requirements ILIKE %s)"
             like = f"%{q.strip()}%"
             params.extend([like, like, like])
 
         if location and location.strip():
-            query += " AND location ILIKE %s" # ILIKE 不区分大小写
+            query += " AND location ILIKE %s"
             params.append(f"%{location.strip()}%")
             
         if category and category.strip():
@@ -100,7 +92,6 @@ def get_jobs(limit=50, q=None, location=None, min_salary=None, category=None, jo
             params.append(f"%{category.strip()}%")
             
         if min_salary and min_salary.strip():
-            # Legacy salary fuzzy match
             query += " AND salary_range LIKE %s"
             params.append(f"%{min_salary.strip()}%")
 
@@ -121,7 +112,6 @@ def get_jobs(limit=50, q=None, location=None, min_salary=None, category=None, jo
         rows = c.fetchall()
         conn.close()
         
-        # Convert + apply in-memory filters for salary/type
         result = []
         min_k_num = None
         max_k_num = None
@@ -156,7 +146,7 @@ def get_jobs(limit=50, q=None, location=None, min_salary=None, category=None, jo
             
         return result
     except Exception as e:
-        print(f"⚠️ Get jobs failed: {e}")
+        print(f"Get jobs failed: {e}")
         return []
 
 def init_messages_table():
@@ -177,11 +167,10 @@ def init_messages_table():
         c.execute("CREATE INDEX IF NOT EXISTS idx_messages_user_time ON messages (user_id, timestamp)")
         conn.commit()
         conn.close()
-        print("✅ Table 'messages' ensured.")
+        print("messages table OK")
     except Exception as e:
-        print(f"⚠️ Init messages table failed: {e}")
+        print(f"Init messages table failed: {e}")
 
-# --- 聊天记录相关 ---
 def save_message(user_id, role, content):
     try:
         if not user_id:
@@ -193,7 +182,7 @@ def save_message(user_id, role, content):
         conn.commit()
         conn.close()
     except Exception as e:
-        print(f"⚠️ Save message failed: {e}")
+        print(f"Save message failed: {e}")
 
 def get_history(user_id, limit=50):
     try:
@@ -216,7 +205,7 @@ def get_history(user_id, limit=50):
             result.append(row_dict)
         return result
     except Exception as e:
-        print(f"⚠️ Get history failed: {e}")
+        print(f"Get history failed: {e}")
         return []
 
 def clear_history(user_id):
@@ -230,13 +219,11 @@ def clear_history(user_id):
         conn.commit()
         conn.close()
     except Exception as e:
-        print(f"⚠️ Clear history failed: {e}")
+        print(f"Clear history failed: {e}")
 
-# 启动时测试连接
 init_db()
 init_messages_table()
 
-# --- 新增：获取单个职位详情 ---
 def get_job_by_id(job_id):
     try:
         conn = get_db_connection()
@@ -247,10 +234,9 @@ def get_job_by_id(job_id):
         conn.close()
         return dict(row) if row else None
     except Exception as e:
-        print(f"⚠️ Get job by id failed: {e}")
+        print(f"Get job by id failed: {e}")
         return None
 
-# --- 新增：申请职位相关 ---
 def init_application_table():
     try:
         conn = get_db_connection()
@@ -268,9 +254,9 @@ def init_application_table():
         """)
         conn.commit()
         conn.close()
-        print("✅ Table 'applications' ensured.")
+        print("applications table OK")
     except Exception as e:
-        print(f"⚠️ Init application table failed: {e}")
+        print(f"Init application table failed: {e}")
 
 def apply_for_job(job_id, name, email, message):
     try:
@@ -285,10 +271,9 @@ def apply_for_job(job_id, name, email, message):
         conn.close()
         return True
     except Exception as e:
-        print(f"⚠️ Apply job failed: {e}")
+        print(f"Apply job failed: {e}")
         return False
 
-# 每次启动时尝试初始化新表
 init_application_table()
 
 def init_quiz_results_table():
@@ -308,9 +293,9 @@ def init_quiz_results_table():
         """)
         conn.commit()
         conn.close()
-        print("✅ Table 'quiz_results' ensured.")
+        print("quiz_results table OK")
     except Exception as e:
-        print(f"⚠️ Init quiz results table failed: {e}")
+        print(f"Init quiz results table failed: {e}")
 
 def save_quiz_result(answers, report_text=None, report_model=None, report_status='completed'):
     try:
@@ -331,7 +316,7 @@ def save_quiz_result(answers, report_text=None, report_model=None, report_status
         conn.close()
         return new_id
     except Exception as e:
-        print(f"⚠️ Save quiz result failed: {e}")
+        print(f"Save quiz result failed: {e}")
         return None
 
 def get_quiz_results(limit=20):
@@ -358,7 +343,7 @@ def get_quiz_results(limit=20):
             result.append(row_dict)
         return result
     except Exception as e:
-        print(f"⚠️ Get quiz results failed: {e}")
+        print(f"Get quiz results failed: {e}")
         return []
 
 def get_quiz_result_by_id(result_id):
@@ -383,12 +368,11 @@ def get_quiz_result_by_id(result_id):
             result['created_at'] = result['created_at'].isoformat()
         return result
     except Exception as e:
-        print(f"⚠️ Get quiz result by id failed: {e}")
+        print(f"Get quiz result by id failed: {e}")
         return None
 
 init_quiz_results_table()
 
-# --- 新增：HR 发布职位 ---
 def create_job(title, company, salary, category, location, requirements):
     try:
         conn = get_db_connection()
@@ -407,5 +391,5 @@ def create_job(title, company, salary, category, location, requirements):
         conn.close()
         return new_id
     except Exception as e:
-        print(f"⚠️ Create job failed: {e}")
+        print(f"Create job failed: {e}")
         return None

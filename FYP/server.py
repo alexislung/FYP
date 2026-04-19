@@ -6,10 +6,8 @@ import os
 import socket
 import database
 
-# Set static folder to current directory
 app = Flask(__name__, static_url_path='', static_folder='.')
 
-# Restrict CORS to configured origins in production; keep local dev origins by default.
 configured_origins = [
     origin.strip()
     for origin in (os.environ.get("ALLOWED_ORIGINS", "")).split(",")
@@ -24,7 +22,6 @@ CORS(
     resources={r"/api/*": {"origins": configured_origins or default_dev_origins}}
 )
 
-# Configuration
 API_KEY = os.environ.get("DEEPSEEK_API_KEY", "").strip()
 TARGET_URL = "https://api.deepseek.com/chat/completions"
 QUIZ_ANALYZE_WEBHOOK_URL = os.environ.get("QUIZ_ANALYZE_WEBHOOK_URL", "").strip()
@@ -100,17 +97,13 @@ def apply_job_smart():
     try:
         data = request.json
         job_id = data.get('job_id')
-        resume = data.get('resume')
-        
-        # Save application
         database.apply_for_job(
             job_id, 
             data.get('name'), 
             data.get('email'), 
-            resume # Map resume to message
+            resume
         )
         
-        # Mock AI Analysis Result (Demo Magic)
         import random
         score = random.randint(70, 95)
         
@@ -125,7 +118,6 @@ def apply_job_smart():
                 "recommendations": []
             })
         else:
-            # Low match simulation
             return jsonify({
                 "status": "low_match",
                 "analysis": {
@@ -133,7 +125,7 @@ def apply_job_smart():
                     "reason": "Your experience seems slightly different from the core requirements of this role.",
                     "advice": "Consider emphasizing your transferable skills or looking at junior roles."
                 },
-                "recommendations": database.get_jobs(limit=2) # Recommend other jobs
+                "recommendations": database.get_jobs(limit=2)
             })
 
     except Exception as e:
@@ -141,7 +133,7 @@ def apply_job_smart():
         return jsonify({"error": {"message": str(e)}}), 500
 
 @app.route('/api/hr/jobs', methods=['POST'])
-@app.route('/api/jobs/create', methods=['POST']) # Alias for frontend compatibility
+@app.route('/api/jobs/create', methods=['POST'])
 def post_job():
     try:
         data = request.json
@@ -165,24 +157,21 @@ def analyze_quiz():
         return jsonify({"error": {"message": "Quiz analyze webhook is not configured"}}), 503
     try:
         data = request.json
-        print(f"Received quiz data: {len(data)} fields") # Debug log
+        print(f"Received quiz data: {len(data)} fields")
         print("Forwarding quiz analyze request to configured webhook")
         
-        # Use a timeout to prevent hanging if n8n is slow
         response = requests.post(QUIZ_ANALYZE_WEBHOOK_URL, json=data, timeout=30)
         
-        print(f"n8n response status: {response.status_code}") # Debug log
+        print(f"Webhook response status: {response.status_code}")
         
         if response.status_code == 200:
-            # Try to parse as JSON first
             try:
                 result = response.json()
                 return jsonify(result)
             except:
-                # If n8n returns plain text/HTML
                 return jsonify({"report": response.text})
         else:
-            return jsonify({"error": f"n8n returned status {response.status_code}"}), 502
+            return jsonify({"error": f"Webhook returned status {response.status_code}"}), 502
             
     except Exception as e:
         print(f"Quiz error: {e}")
@@ -302,22 +291,18 @@ def proxy_chat():
         if not user_id:
             return jsonify({"error": {"message": "Missing X-User-Id"}}), 401
 
-        # Get data from frontend
         data = request.json or {}
         user_message = data.get('messages', [])[-1].get('content', '')
 
-        # Save user message to DB
         if user_message:
             database.save_message(user_id, 'user', user_message)
 
-        # Prepare request to DeepSeek
         headers = {
             'Authorization': f'Bearer {API_KEY}',
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         }
 
-        # Stream response from DeepSeek
         resp = requests.post(TARGET_URL, json=data, headers=headers, stream=True, timeout=60)
 
         if resp.status_code != 200:
@@ -327,21 +312,18 @@ def proxy_chat():
             ai_response_content = ""
             for chunk in resp.iter_lines():
                 if chunk:
-                    # Forward the chunk to the client
                     yield chunk + b'\n'
                     
-                    # Parse chunk to accumulate AI response for DB
                     try:
                         chunk_str = chunk.decode('utf-8')
                         if chunk_str.startswith('data: ') and chunk_str != 'data: [DONE]':
-                            json_str = chunk_str[6:]  # Remove "data: " prefix
+                            json_str = chunk_str[6:]
                             chunk_data = json.loads(json_str)
                             delta = chunk_data['choices'][0]['delta'].get('content', '')
                             ai_response_content += delta
                     except:
                         pass
             
-            # Save AI response to DB after stream finishes
             if ai_response_content:
                 database.save_message(user_id, 'assistant', ai_response_content)
 
@@ -373,7 +355,6 @@ def clear_history():
     except Exception as e:
         return jsonify({"error": {"message": str(e)}}), 500
 
-# Helper to get local IP
 def get_local_ip():
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -387,8 +368,6 @@ def get_local_ip():
 if __name__ == '__main__':
     local_ip = get_local_ip()
     print(f"Starting Flask server on port {PORT}...")
-    print(f"✅ Local Access:   http://localhost:{PORT}/coach.html")
-    print(f"📡 Network Access: http://{local_ip}:{PORT}/coach.html")
-    
-    # Use 0.0.0.0 to listen on all interfaces
+    print(f"Local:   http://localhost:{PORT}/coach.html")
+    print(f"Network: http://{local_ip}:{PORT}/coach.html")
     app.run(host='0.0.0.0', port=PORT, debug=True)

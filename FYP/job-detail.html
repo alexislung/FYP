@@ -14,7 +14,7 @@
 </head>
 <body class="bg-[#fafafa] text-neutral-900 antialiased min-h-screen flex flex-col">
 
-  <!-- Navigation (aligned to index.html) -->
+  
   <nav class="sticky top-0 z-30 border-b border-neutral-200/90 bg-white/90 backdrop-blur-md">
     <div class="container mx-auto px-4 md:px-6 py-3.5 flex flex-col lg:flex-row items-center justify-between gap-4">
       <a href="index.html" class="flex items-baseline gap-1.5 font-bold tracking-tight">
@@ -42,7 +42,7 @@
     </div>
   </nav>
 
-  <!-- Main content -->
+  
   <main class="site-main flex-1 container mx-auto px-6 py-12 max-w-4xl">
     
     <a href="job-search.html" class="back-btn">
@@ -53,10 +53,10 @@
     <div id="loading" class="text-center py-20 text-xl text-gray-500">Loading job details...</div>
     <div id="error" class="hidden text-center py-20 text-xl text-red-500">Job not found.</div>
 
-    <!-- Job details card -->
+    
     <div id="job-content" class="hidden bg-white rounded-3xl shadow-xl border-4 border-black overflow-hidden">
       
-      <!-- Header banner -->
+      
       <div class="bg-cyan-50 p-10 border-b-2 border-gray-100">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
@@ -78,14 +78,14 @@
         </div>
       </div>
 
-      <!-- Details content -->
+      
       <div class="p-10">
         <h3 class="text-2xl font-bold mb-6 flex items-center gap-2">
           <svg class="w-6 h-6 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
           Job Requirements
         </h3>
         <div id="job-requirements" class="text-gray-700 text-lg leading-relaxed whitespace-pre-line">
-          <!-- Requirements text will go here -->
+          
         </div>
 
         <div class="mt-12 pt-10 border-t-2 border-gray-100 flex justify-center">
@@ -98,7 +98,7 @@
     </div>
   </main>
 
-  <!-- Footer (aligned to index.html) -->
+  
   <footer class="bg-neutral-950 text-neutral-400 py-12 md:py-14 mt-0">
     <div class="container mx-auto px-4 md:px-6 text-center text-sm">
       <p class="font-medium text-neutral-500">© 2025 Easy Job. All rights reserved.</p>
@@ -112,7 +112,7 @@
   </footer>
   <script src="auth-ui.js"></script>
 
-  <!-- Application Modal -->
+  
   <div id="apply-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 px-4">
     <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl transform transition-all scale-100">
       <h2 class="text-2xl font-black mb-6">Apply for this Job</h2>
@@ -142,7 +142,6 @@
   </div>
 
   <script>
-    // --- Page logic ---
     document.addEventListener('DOMContentLoaded', async () => {
       const params = new URLSearchParams(window.location.search);
       const jobId = params.get('id');
@@ -172,7 +171,6 @@
       document.getElementById('job-salary').textContent = job.salary_range || 'Negotiable';
       document.getElementById('job-category').textContent = job.category || 'General';
       
-      // Safe assignment
       document.getElementById('job-location-text').textContent = job.location || 'Hong Kong';
       
       document.getElementById('job-requirements').textContent = job.requirements || 'No specific requirements listed.';
@@ -183,7 +181,6 @@
       document.getElementById('error').classList.remove('hidden');
     }
 
-    // --- Modal logic ---
     const modal = document.getElementById('apply-modal');
 
     function openModal() {
@@ -194,12 +191,10 @@
         modal.classList.add('hidden');
     }
 
-    // Close on click outside
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
 
-    // --- Apply form logic ---
     document.getElementById('apply-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = e.target.querySelector('button[type="submit"]');
@@ -229,7 +224,6 @@
             if (res.ok) {
                 closeModal();
                 
-                // Show AI Analysis Result
                 if (result.status === 'low_match') {
                     showAiFeedback(result.analysis, result.recommendations);
                 } else {

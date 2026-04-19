@@ -136,12 +136,10 @@
   </div>
 
   <script>
-    // Get report from localStorage first (avoids URL truncation), then URL parameter
     function loadReport() {
       const fromStorage = localStorage.getItem('careerReport');
       const urlParams = new URLSearchParams(window.location.search);
       const fromUrl = urlParams.get('report');
-      // Prefer localStorage so long reports are not truncated by URL length limit
       let reportText = (fromStorage && fromStorage.length > 0) ? fromStorage : (fromUrl || '');
       
       if (!reportText || reportText.trim().length < 10) {
@@ -153,7 +151,6 @@
         return;
       }
       
-      // Safe decode if value looks URL-encoded (from URL param)
       let report = reportText;
       if (fromUrl && reportText === fromUrl && reportText.includes('%')) {
         try {
@@ -163,7 +160,6 @@
         }
       }
       
-      // Handle JSON format
       try {
         const jsonData = JSON.parse(report);
         if (Array.isArray(jsonData) && jsonData[0] && jsonData[0].output) {
@@ -176,7 +172,6 @@
           report = jsonData;
         }
       } catch (e) {
-        // Not JSON, use as is
       }
       
       if (!report || (typeof report === 'string' && report.trim().length < 10)) {
@@ -188,10 +183,8 @@
         return;
       }
       
-      // Store for download
       window.careerReportText = report;
       
-      // Format and display report
       displayReport(report);
     }
     
@@ -204,10 +197,8 @@
     
     function displayReport(report) {
       let cleanReport = report.trim();
-      // Remove main title (with or without asterisks) – do not show
       cleanReport = cleanReport.replace(/\s*\*?\s*CAREER ASSESSMENT REPORT FOR HONG KONG JOB MARKET\s*\*+\s*/gi, '').trim();
       cleanReport = cleanReport.replace(/\s*\*?\s*CAREER ANALYSIS REPORT FOR HONG KONG JOB MARKET\s*\*+\s*/gi, '').trim();
-      // Remove intro sentence (with or without final period)
       cleanReport = cleanReport.replace(/\s*Based on your quiz responses, here is a tailored analysis and career guidance for the Hong Kong context\.?\s*/gi, '').trim();
       cleanReport = cleanReport.replace(/\n\s*Based on your quiz responses[^\n]+Hong Kong context\.?\s*/gi, '\n').trim();
       cleanReport = cleanReport.replace(/^#+\s*/gm, '');
@@ -216,16 +207,13 @@
       
       let html = '<div class="report-title">Your Career Report</div>';
       
-      // Process each block as plain content (no ## section headers)
       sections.forEach(section => {
         const trimmed = section.trim();
         if (!trimmed) return;
-        // Remove any remaining ## or # in the text
         const noHash = trimmed.replace(/#+\s*/g, '');
         const content = noHash.trim();
         if (!content) return;
         
-        // First line as section title: short line, or numbered part (e.g. "1. Personality Summary" or "*5. Summary**")
         const sectionMatch = content.match(/^(.+?)\n([\s\S]*)$/);
         let sectionTitle = null;
         if (sectionMatch && sectionMatch[2].trim()) {
@@ -246,7 +234,6 @@
           if (!sectionTitle) html += '<div class="report-section">';
           const content = toFormat;
           if (content) {
-            // Bullet lists: lines starting with * or - (strip character, render as list, no * shown)
             const lines = content.split('\n');
             const bulletStart = /^[\*\-]\s+/;
             if (lines.some(l => bulletStart.test(l.trim()))) {
@@ -278,7 +265,6 @@
               });
               if (inList) html += listHtml + '</ul>';
             }
-            // Numbered lists
             else if (content.match(/^\d+\.\s+/m)) {
               const items = content.split('\n')
                 .filter(line => line.trim())
@@ -290,7 +276,6 @@
                 .join('');
               html += '<ol class="section-content" style="list-style: decimal; margin-left: 8mm; margin-top: 2mm; margin-bottom: 3mm;">' + items + '</ol>';
             }
-            // Regular paragraphs (strip any stray * from line starts)
             else {
               const paragraphs = content.split(/\n+/).filter(p => p.trim());
               paragraphs.forEach(para => {
@@ -302,11 +287,8 @@
           }
           html += '</div>';
         }
-        // Handle main title (#)
         else if (trimmed.match(/^#\s+(.+)$/)) {
-          // Already handled in report-title
         }
-        // Regular content without section header (strip * and escape)
         else if (trimmed) {
           const safe = trimmed.replace(/^[\*\-]\s*/, '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
           html += '<div class="report-section"><div class="section-content">' + safe + '</div></div>';
@@ -315,10 +297,8 @@
       
       html += '<div class="report-footer">Generated on ' + new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + '</div>';
       
-      // Set content
       document.getElementById('reportContent').innerHTML = html;
       
-      // Clean up HTML entities after rendering
       setTimeout(() => {
         const allTextNodes = [];
         const walker = document.createTreeWalker(
@@ -335,7 +315,6 @@
           }
         }
         
-        // Remove any control characters
         const container = document.getElementById('reportContent');
         if (container) {
           container.innerHTML = container.innerHTML.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
@@ -387,7 +366,6 @@
           btn.textContent = originalText;
         }
       }
-      // Ensure element is visible for html2canvas; hide scrollbar so no grey bar in PDF
       element.style.visibility = 'visible';
       element.style.display = 'block';
       element.style.maxHeight = 'none';
@@ -397,7 +375,6 @@
       element.style.boxShadow = 'none';
       window.scrollTo(0, 0);
       element.scrollIntoView({ block: 'start', behavior: 'instant' });
-      // Short delay so any pending DOM updates finish before capture
       setTimeout(function () {
         requestAnimationFrame(function () {
           var fullHeight = element.scrollHeight;
@@ -408,7 +385,6 @@
             alert('Unable to capture the report area. Please try again later or use "Print Report".');
             return;
           }
-          // Force single-page PDF: scale content so entire report fits on one A4 page (like view report)
           var onePageContentPx = 1020;
           var scale = fullHeight <= onePageContentPx ? 1.2 : Math.min(1.2, onePageContentPx / fullHeight);
           scale = Math.max(0.25, scale);
@@ -433,7 +409,6 @@
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
             pagebreak: { mode: 'avoid-all', before: '.no-pdf-break' }
           };
-          // Use blob + <a> download so browser does not block download in popup (View Report opens in new window)
           html2pdf().set(opt).from(element).toPdf().get('pdf').then(function (pdf) {
             var blob = pdf.output('blob');
             if (!blob || blob.size < 100) {
@@ -460,7 +435,6 @@
       }, 150);
     }
     
-    // Load report on page load
     loadReport();
   </script>
 </body>

@@ -1,4 +1,3 @@
-// Easy Job - simple auth UI (shows "Hi, <name>" when logged in)
 (function () {
   function getStoredName() {
     try { return (localStorage.getItem('easyjob_name') || '').trim(); } catch (_) { return ''; }
@@ -46,7 +45,6 @@
           await window.easyjobSupabase.auth.signOut();
         }
       } catch (_) {
-        // ignore
       } finally {
         clearStoredName();
         clearStoredAccountType();
@@ -80,14 +78,10 @@
   }
 
   async function initSupabaseIfPossible() {
-    // Optional: pages may already include supabase-js CDN
     if (!window.supabase) return null;
-
-    // Try to read config from globals set in login/signup
     var url = (window.SUPABASE_URL || '').trim();
     var key = (window.SUPABASE_ANON_KEY || '').trim();
     if (!url || !key) return null;
-
     try {
       return window.supabase.createClient(url, key);
     } catch (_) {
@@ -96,10 +90,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', async function () {
-    // Fast path: show greeting from localStorage immediately (no network)
     applyGreeting(getStoredName());
-
-    // If supabase is available + configured on this page, verify session and improve name
     var client = await initSupabaseIfPossible();
     if (!client) return;
     window.easyjobSupabase = client;
@@ -119,8 +110,6 @@
         applyGreeting('');
       }
     } catch (_) {
-      // keep localStorage greeting as fallback
     }
   });
 })();
-

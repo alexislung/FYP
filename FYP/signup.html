@@ -14,7 +14,7 @@
 </head>
 <body class="bg-[#fafafa] text-neutral-900 antialiased min-h-screen flex flex-col">
 
-  <!-- Navigation (aligned to index.html) -->
+  
   <nav class="sticky top-0 z-30 border-b border-neutral-200/90 bg-white/90 backdrop-blur-md">
     <div class="container mx-auto px-4 md:px-6 py-3.5 flex flex-col lg:flex-row items-center justify-between gap-4">
       <a href="index.html" class="flex items-baseline gap-1.5 font-bold tracking-tight">
@@ -42,13 +42,13 @@
     </div>
   </nav>
 
-  <!-- Sign up form -->
+  
   <main class="site-main flex-1 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl p-8 md:p-12">
 
       <div class="flex flex-col md:flex-row items-center gap-10">
         
-        <!-- Form -->
+        
         <div class="flex-1 w-full">
           <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Create an account</h2>
           <p class="text-sm text-gray-600 mb-8">
@@ -70,7 +70,7 @@
               </div>
             </div>
 
-            <!-- First name & Last name -->
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input type="text" id="firstName" placeholder="First name" required
                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
@@ -78,11 +78,11 @@
                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
             </div>
 
-            <!-- Email -->
+            
             <input type="email" id="email" placeholder="Email address" required
                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
 
-            <!-- Password & Confirm -->
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input type="password" id="password" placeholder="Password" required minlength="8"
                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
@@ -94,13 +94,13 @@
               Use 8 or more characters with a mix of letters, numbers & symbols
             </p>
 
-            <!-- Show password -->
+            
             <label class="flex items-center space-x-2 cursor-pointer">
               <input type="checkbox" onclick="togglePassword()" class="w-4 h-4 text-cyan-600 rounded">
               <span class="text-sm text-gray-700">Show password</span>
             </label>
 
-            <!-- Submit -->
+            
             <div class="pt-6 flex flex-col items-center gap-4">
               <a href="login.html" class="text-sm text-gray-600 hover:underline">Log in instead</a>
               <button type="submit"
@@ -112,7 +112,7 @@
           </form>
         </div>
 
-        <!-- Right-side logo -->
+        
         <div class="hidden md:block">
           <div class="relative">
             <span class="text-9xl font-black text-gray-900 tracking-tighter">EASY</span>
@@ -130,7 +130,7 @@
     </div>
   </main>
 
-  <!-- Footer (aligned to index.html) -->
+  
   <footer class="bg-neutral-950 text-neutral-400 py-12 md:py-14 mt-0">
     <div class="container mx-auto px-4 md:px-6 text-center text-sm">
       <p class="font-medium text-neutral-500">© 2025 Easy Job. All rights reserved.</p>
@@ -143,10 +143,8 @@
     </div>
   </footer>
 
-  <!-- Simple JS: show/hide password -->
+  
   <script>
-    // ===== Supabase setup (fill these in) =====
-    // From Supabase Dashboard -> Project Settings -> API
     const supabaseClient = window.getEasyjobSupabase && window.getEasyjobSupabase();
 
     function togglePassword() {
@@ -157,7 +155,6 @@
       });
     }
 
-    // Sign up via Supabase Auth (do NOT store passwords in your own tables)
     document.getElementById('signupForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
@@ -195,8 +192,6 @@
 
         if (error) throw error;
 
-        // Optional: store profile in a table (if you created one)
-        // Table suggestion: users(id uuid primary key, email text, first_name text, last_name text, created_at timestamptz default now())
         try {
           const userId = data?.user?.id;
           if (userId) {
@@ -211,7 +206,6 @@
           console.warn('users table upsert skipped/failed:', tableErr);
         }
 
-        // If email confirmation is enabled, user may need to verify email before login
         try {
           localStorage.setItem('easyjob_name', firstName || lastName || email);
           localStorage.setItem('easyjob_account_type', accountType);

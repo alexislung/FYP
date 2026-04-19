@@ -39,11 +39,10 @@ if "%ALLOWED_ORIGINS%"=="" set "ALLOWED_ORIGINS=http://localhost:8000,http://127
 
 echo.
 echo Saving variables...
-setx DEEPSEEK_API_KEY "sk-c62a8c45e8804a3295c178c5305c92b3" >nul
-setx DATABASE_URL "postgresql://postgres:[YOUR-PASSWORD]@db.ylpzdegpjbkrhfbqcbvc.supabase.co:5432/postgres" >nul
+setx DEEPSEEK_API_KEY "%DEEPSEEK_API_KEY%" >nul
+setx DATABASE_URL "%DATABASE_URL%" >nul
 setx ALLOWED_ORIGINS "%ALLOWED_ORIGINS%" >nul
 
-REM Also apply in this current window for immediate testing
 set "DEEPSEEK_API_KEY=%DEEPSEEK_API_KEY%"
 set "DATABASE_URL=%DATABASE_URL%"
 set "ALLOWED_ORIGINS=%ALLOWED_ORIGINS%"

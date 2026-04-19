@@ -1,4 +1,3 @@
-/* CV Editor – step wizard, tags, remove buttons */
 .step { display: none; }
 .step.active { display: block; }
 

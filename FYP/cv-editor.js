@@ -1,4 +1,3 @@
-/* CV Editor – form, steps, CV generation. AI requests are proxied by backend (/api/ai/chat). */
 const DEEPSEEK_API_URL = '/api/ai/chat';
 const DEEPSEEK_MODEL = 'deepseek-chat';
 

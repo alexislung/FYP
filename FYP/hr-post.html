@@ -34,7 +34,7 @@
 </head>
 <body class="bg-[#fafafa] text-neutral-900 antialiased min-h-screen flex flex-col">
 
-  <!-- Navigation (aligned to index.html) -->
+  
   <nav class="sticky top-0 z-30 border-b border-neutral-200/90 bg-white/90 backdrop-blur-md">
     <div class="container mx-auto px-4 md:px-6 py-3.5 flex flex-col lg:flex-row items-center justify-between gap-4">
       <a href="index.html" class="flex items-baseline gap-1.5 font-bold tracking-tight">
@@ -62,7 +62,7 @@
     </div>
   </nav>
 
-  <!-- Main content -->
+  
   <main class="site-main flex-1 container mx-auto px-6 py-12 max-w-3xl">
     <div id="businessGateBanner" class="hidden mb-8 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"></div>
 
@@ -74,7 +74,7 @@
     <div class="bg-white rounded-3xl shadow-xl border-4 border-gray-100 p-8 md:p-12">
       <form id="post-job-form" class="space-y-6">
         
-        <!-- Row 1 -->
+        
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label class="label-text">Job Title</label>
@@ -86,7 +86,7 @@
           </div>
         </div>
 
-        <!-- Row 2 -->
+        
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label class="label-text">Salary Range</label>
@@ -109,7 +109,7 @@
           </div>
         </div>
 
-        <!-- Location -->
+        
         <div>
             <label class="label-text">Location</label>
             <select name="location" class="input-field bg-white">
@@ -126,14 +126,14 @@
             </select>
         </div>
 
-        <!-- Requirements -->
+        
         <div>
           <label class="label-text">Job Requirements & Description</label>
           <textarea name="requirements" required rows="6" placeholder="List the key responsibilities and requirements..." class="input-field"></textarea>
           <p class="text-xs text-gray-400 mt-2 text-right">Tip: Be specific to attract better candidates.</p>
         </div>
 
-        <!-- Submit Button -->
+        
         <div class="pt-6">
           <button type="submit" class="w-full bg-black text-white text-xl font-bold py-4 rounded-xl hover:bg-gray-800 transition-transform hover:scale-[1.02] shadow-lg">
             Publish Job Now
@@ -145,7 +145,7 @@
 
   </main>
 
-  <!-- Footer (aligned to index.html) -->
+  
   <footer class="bg-neutral-950 text-neutral-400 py-12 md:py-14 mt-0">
     <div class="container mx-auto px-4 md:px-6 text-center text-sm">
       <p class="font-medium text-neutral-500">© 2025 Easy Job. All rights reserved.</p>
@@ -216,7 +216,6 @@
         btn.textContent = 'Publishing...';
         btn.disabled = true;
 
-        // Collect form data
         const formData = new FormData(e.target);
         const data = Object.fromEntries(formData.entries());
 
@@ -231,7 +230,6 @@
 
             if (res.ok) {
                 alert('✅ Job Published Successfully!');
-                // Redirect to the new job page
                 window.location.href = `job-detail.html?id=${result.id}`;
             } else {
                 alert('❌ Error: ' + (result.error || 'Unknown error'));

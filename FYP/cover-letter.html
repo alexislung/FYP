@@ -13,7 +13,7 @@
 </head>
 <body class="bg-[#fafafa] text-neutral-900 antialiased min-h-screen flex flex-col">
 
-  <!-- Navigation (aligned to index.html) -->
+  
   <nav class="sticky top-0 z-30 border-b border-neutral-200/90 bg-white/90 backdrop-blur-md">
     <div class="container mx-auto px-4 md:px-6 py-3.5 flex flex-col lg:flex-row items-center justify-between gap-4">
       <a href="index.html" class="flex items-baseline gap-1.5 font-bold tracking-tight">
@@ -47,7 +47,7 @@
   </div>
 
   <div id="coverLetterWizard">
-    <!-- CL Step 1: Job details -->
+    
     <div class="cl-step" data-cl="1">
       <div class="mb-8">
         <h2 class="text-2xl font-bold text-gray-900 mb-2">Where are you applying?</h2>
@@ -80,7 +80,7 @@
         </div>
       </div>
     </div>
-    <!-- CL Step 2: Experience length -->
+    
     <div class="cl-step hidden" data-cl="2" data-cl-key="experienceYears">
       <div class="mb-8">
         <h2 class="text-2xl font-bold text-gray-900 mb-2">How long have you been working?</h2>
@@ -94,7 +94,7 @@
         <button type="button" class="cl-option px-5 py-2.5 rounded-lg border-2 border-gray-300 text-gray-700 font-medium hover:border-cyan-500 hover:text-cyan-600" data-value="10+ Years">10+ Years</button>
       </div>
     </div>
-    <!-- CL Step 3: Student -->
+    
     <div class="cl-step hidden" data-cl="3" data-cl-key="student">
       <div class="mb-8">
         <h2 class="text-2xl font-bold text-gray-900 mb-2">Are you a student?</h2>
@@ -106,7 +106,7 @@
         <button type="button" class="cl-option px-5 py-2.5 rounded-lg border-2 border-gray-300 text-gray-700 font-medium hover:border-cyan-500 hover:text-cyan-600" data-value="Recent Graduate">Recent Graduate</button>
       </div>
     </div>
-    <!-- CL Step 4: School type -->
+    
     <div class="cl-step hidden" data-cl="4" data-cl-key="schoolType">
       <div class="mb-8">
         <h2 class="text-2xl font-bold text-gray-900 mb-2">What kind of school is it?</h2>
@@ -118,7 +118,7 @@
         <button type="button" class="cl-option px-5 py-2.5 rounded-lg border-2 border-gray-300 text-gray-700 font-medium hover:border-cyan-500 hover:text-cyan-600" data-value="College">College</button>
       </div>
     </div>
-    <!-- CL Step 5: What did you study -->
+    
     <div class="cl-step hidden" data-cl="5">
       <div class="mb-8">
         <h2 class="text-2xl font-bold text-gray-900 mb-2">What did you study?</h2>
@@ -135,7 +135,7 @@
         </div>
       </div>
     </div>
-    <!-- CL Step 6: Working style -->
+    
     <div class="cl-step hidden" data-cl="6" data-cl-key="workingStyle">
       <div class="mb-8">
         <h2 class="text-2xl font-bold text-gray-900 mb-2">What's your working style?</h2>
@@ -150,15 +150,15 @@
         <button type="button" class="cl-option text-left p-4 rounded-lg border-2 border-gray-300 hover:border-cyan-500" data-value="Service-oriented"><span class="font-semibold text-gray-900">Service-oriented</span><br><span class="text-sm text-gray-600">You excel in collaborative situations and enjoy helping others.</span></button>
       </div>
     </div>
-    <!-- CL Step 7: Top 3 strengths (format: selected on top as solid buttons + checkmark, available below as grid with + on right) -->
+    
     <div class="cl-step hidden" data-cl="7">
       <div class="mb-6">
         <h2 class="text-2xl font-bold text-gray-900 mb-2">Choose your top 3 strengths.</h2>
         <p class="text-gray-600 text-sm">We'll highlight these in your cover letter to help match your strengths to the desired position.</p>
       </div>
-      <!-- Selected: solid cyan buttons with white text + checkmark (click to remove) -->
+      
       <div id="clStrengthsChosen" class="flex flex-wrap gap-3 mb-6"></div>
-      <!-- Available: grey border, grey text, + icon on right -->
+      
       <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="clStrengthsOptions">
         <button type="button" class="cl-strength flex items-center justify-between px-4 py-3 rounded-lg border border-gray-300 text-gray-600 text-sm font-medium hover:border-cyan-500 hover:text-cyan-600 text-left" data-value="Innovation"><span>Innovation</span><span class="text-gray-400 ml-2">+</span></button>
         <button type="button" class="cl-strength flex items-center justify-between px-4 py-3 rounded-lg border border-gray-300 text-gray-600 text-sm font-medium hover:border-cyan-500 hover:text-cyan-600 text-left" data-value="Critical thinking"><span>Critical thinking</span><span class="text-gray-400 ml-2">+</span></button>
@@ -180,21 +180,21 @@
         <button type="button" class="cl-strength flex items-center justify-between px-4 py-3 rounded-lg border border-gray-300 text-gray-600 text-sm font-medium hover:border-cyan-500 hover:text-cyan-600 text-left" data-value="Time-management"><span>Time-management</span><span class="text-gray-400 ml-2">+</span></button>
       </div>
     </div>
-    <!-- CL Step 8: Generate -->
+    
     <div class="cl-step hidden" data-cl="8">
       <div class="mb-8 text-center">
         <h2 class="text-2xl font-bold text-gray-900 mb-2">Ready to generate your cover letter</h2>
         <p class="text-gray-600 text-sm mb-1">We'll create a personalized letter using your answers and CV.</p>
       </div>
     </div>
-    <!-- Wizard nav: Back + Continue -->
+    
     <div class="flex justify-between items-center mt-12 pt-8 border-t border-gray-100">
       <button type="button" onclick="clPrev()" id="clBackBtn" class="px-6 py-2.5 border-2 border-cyan-500 text-cyan-600 font-medium rounded-lg hover:bg-cyan-50">← Back</button>
       <button type="button" onclick="clNext()" id="clNextBtn" class="px-6 py-2.5 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600">Continue</button>
     </div>
   </div>
 
-  <!-- Result: no box, content on page -->
+  
   <div id="coverLetterResult" class="mt-10 hidden">
     <h3 class="text-2xl font-bold mb-4 text-gray-900">Your Cover Letter</h3>
     <div id="coverLetterContent" class="prose max-w-none whitespace-pre-wrap text-gray-700 mb-6"></div>
@@ -211,7 +211,7 @@
   </div>
 </main>
 
-  <!-- Footer (aligned to index.html) -->
+  
   <footer class="bg-neutral-950 text-neutral-400 py-12 md:py-14 mt-0">
     <div class="container mx-auto px-4 md:px-6 text-center text-sm">
       <p class="font-medium text-neutral-500">© 2025 Easy Job. All rights reserved.</p>

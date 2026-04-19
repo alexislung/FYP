@@ -12,23 +12,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <style type="text/tailwindcss">
   body { background: #fafafa; min-height: 100vh; display: flex; flex-direction: column; }
-  
-  /* Chat Bubbles */
   .bubble { @apply max-w-[85%] px-5 py-4 rounded-3xl leading-relaxed break-words shadow-sm; }
   .ai { @apply bg-white text-gray-800 rounded-bl-none self-start border border-gray-100; }
   .user { @apply bg-black text-white rounded-br-none self-end; }
-  
-  /* Markdown Styles */
   .ai ul, .ai ol { @apply ml-5 list-disc my-2; }
   .ai p { @apply mb-2 last:mb-0; }
   .ai strong { @apply font-bold text-black; }
-
-  /* Layout */
   .main-container { @apply flex-1 flex overflow-hidden max-w-7xl mx-auto w-full p-4 gap-4; }
   .sidebar { @apply w-80 bg-white rounded-3xl p-6 shadow-xl flex flex-col hidden md:flex; }
   .chat-area { @apply flex-1 bg-white rounded-3xl shadow-xl flex flex-col overflow-hidden relative; }
-
-  /* Typing Indicator */
   .typing span { @apply inline-block w-2 h-2 bg-gray-400 rounded-full mx-0.5 animate-bounce; }
   .typing span:nth-child(2) { animation-delay: 0.1s; }
   .typing span:nth-child(3) { animation-delay: 0.2s; }
@@ -36,7 +28,7 @@
 </head>
 <body class="text-neutral-900 antialiased">
 
-  <!-- Navigation (aligned to index.html) -->
+  
   <nav class="sticky top-0 z-30 border-b border-neutral-200/90 bg-white/90 backdrop-blur-md shrink-0">
     <div class="container mx-auto px-4 md:px-6 py-3.5 flex flex-col lg:flex-row items-center justify-between gap-4">
       <a href="index.html" class="flex items-baseline gap-1.5 font-bold tracking-tight">
@@ -64,10 +56,10 @@
     </div>
   </nav>
 
-<!-- Main Content -->
+
 <main class="site-main flex-1 main-container">
   
-  <!-- Sidebar: Controls -->
+  
   <aside class="sidebar">
     <div class="mb-8">
         <h2 class="text-xl font-black mb-4">Mock Interview Setup</h2>
@@ -108,9 +100,9 @@
     </div>
   </aside>
 
-  <!-- Chat Area -->
+  
   <main class="chat-area">
-    <!-- Header -->
+    
     <div class="p-4 border-b border-gray-100 flex items-center justify-between bg-white z-10">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white font-bold">AI</div>
@@ -121,7 +113,7 @@
                 </p>
             </div>
             
-            <!-- Sound Toggle (Moved here for better visibility) -->
+            
             <div class="h-8 w-px bg-gray-200 mx-1"></div>
             <button id="soundToggle" onclick="toggleSound()" class="p-2 text-gray-400 hover:text-cyan-500 hover:bg-cyan-50 rounded-full transition-all" title="Toggle Voice">
                 <svg id="soundIconOn" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
@@ -130,16 +122,16 @@
         </div>
     </div>
 
-    <!-- Messages -->
+    
     <div id="messages" class="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50">
-        <!-- Welcome Message -->
+        
         <div class="bubble ai">
             Hi! I'm Sarah, your AI interview coach. <br>
             Select a role on the left and click <strong>Start Interview</strong> to begin a realistic mock session, or just ask me anything!
         </div>
     </div>
 
-    <!-- Input -->
+    
     <div class="p-4 bg-white border-t border-gray-100">
         <div class="flex items-center gap-2 bg-gray-100 rounded-2xl p-2 pr-4 border-2 border-transparent focus-within:border-black focus-within:bg-white transition-colors">
             <button id="voiceBtn" class="p-3 text-gray-500 hover:text-black hover:bg-gray-200 rounded-xl transition">
@@ -154,7 +146,7 @@
   </main>
 </main>
 
-  <!-- Footer (aligned to index.html) -->
+  
   <footer class="bg-neutral-950 text-neutral-400 py-12 md:py-14 mt-0">
     <div class="container mx-auto px-4 md:px-6 text-center text-sm">
       <p class="font-medium text-neutral-500">© 2025 Easy Job. All rights reserved.</p>
@@ -175,7 +167,6 @@ const roleSelect = document.getElementById('role-select');
 let isInterviewMode = false;
 
 async function getChatUserId() {
-    // Prefer authenticated Supabase user id when available
     try {
         if (window.easyjobSupabase && window.easyjobSupabase.auth) {
             const sessionRes = await window.easyjobSupabase.auth.getSession();
@@ -185,10 +176,8 @@ async function getChatUserId() {
             }
         }
     } catch (_) {
-        // fallback below
     }
 
-    // Fallback to device-scoped anonymous id (still isolates users by browser/device)
     try {
         let guestId = localStorage.getItem('easyjob_guest_id');
         if (!guestId) {
@@ -203,7 +192,6 @@ async function getChatUserId() {
     }
 }
 
-// Auto-scroll
 const scrollToBottom = () => messages.scrollTop = messages.scrollHeight;
 
 function addMessage(text, type) {
@@ -229,22 +217,17 @@ function removeTyping() {
     if(el) el.remove();
 }
 
-// Start Mock Interview Logic
 async function startMockInterview() {
     const role = roleSelect.value;
     isInterviewMode = true;
-    
-    // Clear chat visually but keep context in backend if needed (or clear backend too)
     messages.innerHTML = '';
     document.getElementById('status-text').textContent = `Interviewing for ${role}...`;
-    
-    // Initial Prompt
     const prompt = `Act as a professional interviewer for a ${role} position. 
     Start the interview by introducing yourself briefly and asking the first question. 
     Do not give feedback yet. Wait for my answer. 
     Ask one question at a time.`;
 
-    await callAI(prompt, true); // true = isSystemInstruction
+    await callAI(prompt, true);
 }
 
 async function quickAsk(text) {
@@ -258,13 +241,7 @@ async function sendMessage() {
     
     addMessage(text, 'user');
     userInput.value = '';
-    
-    // Context aware prompt
     let prompt = text;
-    if (isInterviewMode) {
-        // In interview mode, we just send the user's answer, AI knows context
-    }
-
     await callAI(prompt);
 }
 
@@ -334,11 +311,8 @@ async function callAI(text, isSystem = false) {
     }
 }
 
-// Text to Speech
-// Initialize from localStorage or default to true
 let isSoundEnabled = localStorage.getItem('coach_sound_enabled') !== 'false';
 
-// Initialize UI on load
 document.addEventListener('DOMContentLoaded', () => {
     updateSoundUI();
 });
@@ -366,31 +340,26 @@ function toggleSound() {
     localStorage.setItem('coach_sound_enabled', isSoundEnabled);
     
     if (!isSoundEnabled) {
-        speechSynthesis.cancel(); // Stop current speech immediately
+        speechSynthesis.cancel();
     }
     updateSoundUI();
 }
 
 function speak(text) {
     if (!isSoundEnabled) return;
-
-    // Strip markdown for speech
     const cleanText = text.replace(/[*#_]/g, '');
     const utter = new SpeechSynthesisUtterance(cleanText);
-    utter.lang = 'en-US'; // Interview usually in English
+    utter.lang = 'en-US';
     speechSynthesis.speak(utter);
 }
 
-// Enter key
 userInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
 });
 
-// Clear History
 async function clearHistory() {
     messages.innerHTML = '';
     addMessage("Chat history cleared.", 'ai');
-    // Call backend clear API if exists
     try {
         const chatUserId = await getChatUserId();
         await fetch('/api/clear', {

@@ -1,4 +1,3 @@
-/* Cover Letter page – wizard, generate from draft CV (localStorage), same colors as cv-editor */
 const DEEPSEEK_API_URL = '/api/ai/chat';
 const DEEPSEEK_MODEL = 'deepseek-chat';
 const CV_DRAFT_KEY = 'easyjob_cv_draft';
@@ -6,7 +5,6 @@ const CV_DRAFT_KEY = 'easyjob_cv_draft';
 var coverLetterStep = 1;
 var coverLetterData = { experienceYears: '', student: '', schoolType: '', degree: '', fieldOfStudy: '', workingStyle: '', strengths: [] };
 
-/** Build CV data shape from localStorage draft (same as collectCVData output) for API prompt */
 function getCVDataFromDraft() {
   try {
     var raw = localStorage.getItem(CV_DRAFT_KEY);
