@@ -1,7 +1,13 @@
 from pathlib import Path
+import os
 
 try:
     from dotenv import load_dotenv
+    _env_file = (os.environ.get("EASYJOB_ENV_FILE") or "").strip()
+    if _env_file:
+        _p = Path(_env_file)
+        if _p.is_file():
+            load_dotenv(_p, override=False)
     load_dotenv(Path(__file__).resolve().parent / ".env", override=False)
 except ImportError:
     pass
@@ -10,15 +16,25 @@ from flask import Flask, request, jsonify, Response, stream_with_context, send_f
 from flask_cors import CORS
 import requests
 import json
-import os
 import socket
 import database
 
+try:
+    import local_keys as _local_keys
+    _lk_deepseek = (getattr(_local_keys, "DEEPSEEK_API_KEY", None) or "").strip()
+    _lk_origins = (getattr(_local_keys, "ALLOWED_ORIGINS", None) or "").strip()
+    _lk_quiz_webhook = (getattr(_local_keys, "QUIZ_ANALYZE_WEBHOOK_URL", None) or "").strip()
+except ImportError:
+    _lk_deepseek = ""
+    _lk_origins = ""
+    _lk_quiz_webhook = ""
+
 app = Flask(__name__, static_url_path='', static_folder='.')
 
+_origins_csv = (os.environ.get("ALLOWED_ORIGINS", "") or "").strip() or _lk_origins
 configured_origins = [
     origin.strip()
-    for origin in (os.environ.get("ALLOWED_ORIGINS", "")).split(",")
+    for origin in _origins_csv.split(",")
     if origin.strip()
 ]
 default_dev_origins = [
@@ -30,9 +46,9 @@ CORS(
     resources={r"/api/*": {"origins": configured_origins or default_dev_origins}}
 )
 
-API_KEY = os.environ.get("DEEPSEEK_API_KEY", "").strip()
+API_KEY = (os.environ.get("DEEPSEEK_API_KEY", "") or "").strip() or _lk_deepseek
 TARGET_URL = "https://api.deepseek.com/chat/completions"
-QUIZ_ANALYZE_WEBHOOK_URL = os.environ.get("QUIZ_ANALYZE_WEBHOOK_URL", "").strip()
+QUIZ_ANALYZE_WEBHOOK_URL = (os.environ.get("QUIZ_ANALYZE_WEBHOOK_URL", "") or "").strip() or _lk_quiz_webhook
 PORT = int(os.environ.get("PORT", 8000))
 JOB_SEARCH_IMAGE_DIRS = [
     os.path.abspath(os.path.join(app.root_path, "..", "Job Search")),

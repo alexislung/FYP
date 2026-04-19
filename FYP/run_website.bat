@@ -3,6 +3,8 @@ title EasyJob Server
 cd /d "%~dp0"
 
 if exist ".env" goto startpy
+if exist "local_keys.py" goto startpy
+if not "%EASYJOB_ENV_FILE%"=="" if exist "%EASYJOB_ENV_FILE%" goto startpy
 
 if "%DEEPSEEK_API_KEY%"=="" (
   echo [ERROR] Missing DEEPSEEK_API_KEY.

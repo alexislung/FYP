@@ -51,4 +51,7 @@ echo.
 echo [OK] Variables saved.
 echo Please close this window and open a new terminal before running run_website.bat.
 echo.
+echo Optional (privacy): set user variable EASYJOB_ENV_FILE to a path OUTSIDE this folder
+echo   (e.g. %%LOCALAPPDATA%%\EasyJob\secrets.env) and put DATABASE_URL=... there instead of .env
+echo.
 pause

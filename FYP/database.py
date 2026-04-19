@@ -8,6 +8,11 @@ from pathlib import Path
 
 try:
     from dotenv import load_dotenv
+    _ext = (os.environ.get("EASYJOB_ENV_FILE") or "").strip()
+    if _ext:
+        _pp = Path(_ext)
+        if _pp.is_file():
+            load_dotenv(_pp, override=False)
     load_dotenv(Path(__file__).resolve().parent / ".env", override=False)
 except ImportError:
     pass
@@ -18,20 +23,42 @@ DB_USER = os.environ.get("DB_USER", "").strip()
 DB_PASS = os.environ.get("DB_PASS", "").strip()
 DB_PORT = os.environ.get("DB_PORT", "").strip()
 DB_URL = os.environ.get("DATABASE_URL", "").strip()
-DB_SSL_MODE = "require"
+DB_SSL_MODE = (os.environ.get("DB_SSL_MODE", "require") or "require").strip()
 
 if not DB_URL and all([DB_HOST, DB_NAME, DB_USER, DB_PASS, DB_PORT]):
     DB_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
+try:
+    import local_keys as _local_keys
+    if not DB_URL:
+        _lu = getattr(_local_keys, "DATABASE_URL", None)
+        if _lu and str(_lu).strip():
+            DB_URL = str(_lu).strip()
+    if not os.environ.get("DB_SSL_MODE", "").strip():
+        _ls = getattr(_local_keys, "DB_SSL_MODE", None)
+        if _ls and str(_ls).strip():
+            DB_SSL_MODE = str(_ls).strip()
+except ImportError:
+    pass
 
 def get_db_connection():
     try:
         if not DB_URL:
             print("Database connection failed: DATABASE_URL is not configured")
             return None
-        conn = psycopg2.connect(DB_URL, sslmode=DB_SSL_MODE)
+        try:
+            timeout_s = int(os.environ.get("DB_CONNECT_TIMEOUT", "15") or "15")
+        except ValueError:
+            timeout_s = 15
+        conn = psycopg2.connect(
+            DB_URL,
+            sslmode=DB_SSL_MODE,
+            connect_timeout=timeout_s,
+        )
         return conn
     except Exception as e:
-        print(f"Database connection failed: {e}")
+        print("Database connection failed:", e)
+        traceback.print_exc()
         return None
 
 def init_db():
