@@ -270,6 +270,8 @@ def _run_ddl():
             content TEXT NOT NULL,
             timestamp TIMESTAMPTZ DEFAULT NOW()
         )""",
+        # Old DBs may have messages without user_id; CREATE TABLE IF NOT EXISTS does not add columns.
+        "ALTER TABLE messages ADD COLUMN IF NOT EXISTS user_id TEXT",
         "CREATE INDEX IF NOT EXISTS idx_messages_user_time ON messages (user_id, timestamp)",
         """CREATE TABLE IF NOT EXISTS applications (
             id SERIAL PRIMARY KEY,
