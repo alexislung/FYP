@@ -127,20 +127,28 @@ def get_jobs(limit=50, q=None, location=None, min_salary=None, category=None, jo
             max_k_num = None
 
         selected_types = [t.strip() for t in (job_types or []) if t and str(t).strip()]
+        eff_min_k = min_k_num
+        eff_max_k = max_k_num
+        if eff_min_k is not None and eff_min_k <= 0:
+            eff_min_k = None
+        if eff_max_k is not None and eff_max_k >= 120:
+            eff_max_k = None
+
         for row in rows:
             job = dict(row)
 
             if selected_types and (not _match_job_type(job, selected_types)):
                 continue
 
-            if min_k_num is not None or max_k_num is not None:
+            if eff_min_k is not None or eff_max_k is not None:
                 low, high = _extract_salary_k_range(job.get("salary_range"))
                 if low is None and high is None:
-                    continue
-                if min_k_num is not None and high is not None and high < min_k_num:
-                    continue
-                if max_k_num is not None and low is not None and low > max_k_num:
-                    continue
+                    pass
+                else:
+                    if eff_min_k is not None and high is not None and high < eff_min_k:
+                        continue
+                    if eff_max_k is not None and low is not None and low > eff_max_k:
+                        continue
 
             result.append(job)
             
