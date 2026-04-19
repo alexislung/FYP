@@ -3,6 +3,7 @@ from psycopg2.extras import RealDictCursor
 import os
 import re
 import json
+import traceback
 
 DB_HOST = os.environ.get("DB_HOST", "").strip()
 DB_NAME = os.environ.get("DB_NAME", "").strip()
@@ -31,6 +32,94 @@ def init_db():
     if conn:
         print("Database connection OK")
         conn.close()
+
+
+def is_database_url_configured():
+    if (DB_URL or "").strip():
+        return True
+    return all([DB_HOST, DB_NAME, DB_USER, DB_PASS, DB_PORT])
+
+
+def init_jobs_table():
+    try:
+        conn = get_db_connection()
+        if conn is None:
+            return
+        c = conn.cursor()
+        c.execute(
+            """
+            CREATE TABLE IF NOT EXISTS jobs (
+                id SERIAL PRIMARY KEY,
+                title TEXT NOT NULL,
+                company TEXT NOT NULL,
+                salary_range TEXT,
+                category TEXT,
+                location TEXT,
+                requirements TEXT,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            );
+            """
+        )
+        conn.commit()
+        c.execute("SELECT COUNT(*) FROM jobs")
+        n = c.fetchone()[0]
+        if n == 0:
+            demos = [
+                (
+                    "Frontend Developer",
+                    "Harbour Digital",
+                    "$28K - 38K",
+                    "Technology & IT",
+                    "Hong Kong",
+                    "React, HTML/CSS, REST APIs, Git.",
+                ),
+                (
+                    "Financial Analyst",
+                    "Metro Finance Ltd",
+                    "Negotiable",
+                    "Finance & Accounting",
+                    "Central, Hong Kong",
+                    "Excel, financial modelling, reporting.",
+                ),
+                (
+                    "Marketing Executive",
+                    "BrightWave Agency",
+                    "22K-30K",
+                    "Marketing & Sales",
+                    "Kowloon",
+                    "Social media, campaigns, basic analytics.",
+                ),
+                (
+                    "Graduate Engineer",
+                    "Skyline Infrastructure",
+                    "45000-52000",
+                    "Engineering",
+                    "Hong Kong",
+                    "Site visits, AutoCAD, teamwork.",
+                ),
+                (
+                    "HR Officer",
+                    "United Services Co.",
+                    "Part-time 18K",
+                    "Human Resources",
+                    "Hybrid",
+                    "Recruitment admin, interviews, onboarding.",
+                ),
+            ]
+            for row in demos:
+                c.execute(
+                    """
+                    INSERT INTO jobs (title, company, salary_range, category, location, requirements)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    """,
+                    row,
+                )
+            conn.commit()
+            print(f"Seeded {len(demos)} demo jobs (jobs table was empty).")
+        conn.close()
+    except Exception as e:
+        print(f"init_jobs_table failed: {e}")
+        traceback.print_exc()
 
 def _extract_salary_k_range(text):
     s = (text or "").lower()
@@ -155,6 +244,7 @@ def get_jobs(limit=50, q=None, location=None, min_salary=None, category=None, jo
         return result
     except Exception as e:
         print(f"Get jobs failed: {e}")
+        traceback.print_exc()
         return []
 
 def init_messages_table():
@@ -230,6 +320,7 @@ def clear_history(user_id):
         print(f"Clear history failed: {e}")
 
 init_db()
+init_jobs_table()
 init_messages_table()
 
 def get_job_by_id(job_id):

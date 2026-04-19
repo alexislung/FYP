@@ -522,8 +522,18 @@
 
       try {
         var res = await fetch('/api/jobs?' + params.toString());
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        var jobs = await res.json();
+        var rawText = await res.text();
+        var jobs = [];
+        try {
+          jobs = JSON.parse(rawText);
+        } catch (parseErr) {
+          jobs = [];
+        }
+        if (!res.ok) {
+          var detail = 'HTTP ' + res.status;
+          if (jobs && jobs.error && jobs.error.message) detail = jobs.error.message;
+          throw new Error(detail);
+        }
         if (!Array.isArray(jobs)) jobs = [];
 
         if (!jobs.length) {
@@ -539,7 +549,8 @@
         }
       } catch (e) {
         console.error(e);
-        if (grid) grid.innerHTML = '<div class="col-span-full text-center text-red-500">Failed to search. Make sure the server is running.</div>';
+        var msg = (e && e.message) ? String(e.message) : 'Request failed';
+        if (grid) grid.innerHTML = '<div class="col-span-full text-center text-red-500">' + msg + '</div><p class="col-span-full text-center text-sm text-gray-500 mt-2">Tip: run set_env.bat then restart run_website.bat. Check the server window for errors.</p>';
         if (meta) meta.textContent = '';
       } finally {
         if (btn) { btn.disabled = false; btn.textContent = 'Search'; }

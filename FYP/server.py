@@ -38,6 +38,23 @@ def serve_index():
 @app.route('/api/jobs', methods=['GET'])
 def get_jobs():
     try:
+        if not database.is_database_url_configured():
+            return jsonify({
+                "error": {
+                    "code": "NO_DB_CONFIG",
+                    "message": "DATABASE_URL is not set (or DB_HOST/DB_NAME/DB_USER/DB_PASS/DB_PORT incomplete).",
+                }
+            }), 503
+        probe = database.get_db_connection()
+        if probe is None:
+            return jsonify({
+                "error": {
+                    "code": "DB_CONNECT_FAILED",
+                    "message": "Cannot connect to PostgreSQL. Check DATABASE_URL and SSL/network.",
+                }
+            }), 503
+        probe.close()
+
         q = request.args.get('q')
         location = request.args.get('location')
         salary = request.args.get('salary')
