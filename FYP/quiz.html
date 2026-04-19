@@ -700,14 +700,9 @@
     let currentQuestion = 1;
     const totalQuestions = 35;
 
-    // DeepSeek API (same as CV / Cover Letter pages)
-    const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
+    // DeepSeek API via backend proxy (key stays on server)
+    const DEEPSEEK_API_URL = '/api/ai/chat';
     const DEEPSEEK_MODEL = 'deepseek-chat';
-    const DEEPSEEK_API_KEY = 'sk-45a75bfb45174903ada13c17ceb828d4'; // Set your key here for career report
-
-    function getDeepSeekApiKey() {
-      return (typeof DEEPSEEK_API_KEY === 'string' && DEEPSEEK_API_KEY.trim()) || '';
-    }
 
     async function saveQuizResultToServer(payload) {
       try {
@@ -861,25 +856,13 @@
       // Scroll to top
       window.scrollTo({ top: 0, behavior: 'smooth' });
       
-      // Call DeepSeek API (same pattern as CV / Cover Letter pages)
-      const apiKey = getDeepSeekApiKey();
-      if (!apiKey) {
-        document.getElementById('resultContent').innerHTML =
-          '<div class="text-center py-20">' +
-          '<div class="text-amber-500 text-6xl mb-6">⚠️</div>' +
-          '<h2 class="text-3xl font-bold text-gray-900 mb-4">API key not set</h2>' +
-          '<p class="text-gray-600 mb-6">Set DEEPSEEK_API_KEY in quiz.html to generate your career report.</p>' +
-          '<button onclick="location.reload()" class="submit-btn">Back to Quiz</button></div>';
-        return;
-      }
-
       const quizSummary = Object.entries(quizData).map(([k, v]) => k + ': ' + (v || '')).join('\n');
       const userPrompt = 'Based on the following career quiz answers, write a tailored analysis and career guidance for the Hong Kong context. Keep the report concise so it fits about one page. Use clear sections (e.g. Personality fit, Recommended roles, Development tips, Work preferences). Use markdown: # for main headings, ## for subheadings, - for bullet points. Output only the report text.\n\nQuiz answers:\n' + quizSummary;
 
       try {
         const response = await fetch(DEEPSEEK_API_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             model: DEEPSEEK_MODEL,
             messages: [
@@ -887,8 +870,7 @@
               { role: 'user', content: userPrompt }
             ],
             temperature: 0.5
-          }),
-          mode: 'cors'
+          })
         });
 
         if (!response.ok) {
@@ -993,7 +975,7 @@
           ? '<p class="text-sm text-left max-w-md mx-auto mt-4 p-4 bg-amber-50 rounded-lg">' +
             '<strong>Tips:</strong> Check your network. If using a local file, try opening via a local server (e.g. <code>python -m http.server 8000</code> then http://localhost:8000/quiz.html).</p>'
           : '<p class="text-sm text-left max-w-md mx-auto mt-4 p-4 bg-amber-50 rounded-lg">' +
-            'Check: Is DEEPSEEK_API_KEY set correctly in quiz.html? Is your API key valid?</p>';
+            'Check: Is backend API key configured on the server? Is your API key valid?</p>';
         document.getElementById('resultContent').innerHTML =
           '<div class="text-center py-20">' +
           '<div class="text-red-500 text-6xl mb-6">⚠️</div>' +

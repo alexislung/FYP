@@ -8,11 +8,26 @@ import database
 
 # Set static folder to current directory
 app = Flask(__name__, static_url_path='', static_folder='.')
-CORS(app)  # Enable CORS for all routes
+
+# Restrict CORS to configured origins in production; keep local dev origins by default.
+configured_origins = [
+    origin.strip()
+    for origin in (os.environ.get("ALLOWED_ORIGINS", "")).split(",")
+    if origin.strip()
+]
+default_dev_origins = [
+    r"http://localhost:\d+",
+    r"http://127\.0\.0\.1:\d+",
+]
+CORS(
+    app,
+    resources={r"/api/*": {"origins": configured_origins or default_dev_origins}}
+)
 
 # Configuration
-API_KEY = "sk-e66576b892ea490599f0a5c366611858"
+API_KEY = os.environ.get("DEEPSEEK_API_KEY", "").strip()
 TARGET_URL = "https://api.deepseek.com/chat/completions"
+QUIZ_ANALYZE_WEBHOOK_URL = os.environ.get("QUIZ_ANALYZE_WEBHOOK_URL", "").strip()
 PORT = int(os.environ.get("PORT", 8000))
 JOB_SEARCH_IMAGE_DIRS = [
     os.path.abspath(os.path.join(app.root_path, "..", "Job Search")),
@@ -144,21 +159,17 @@ def post_job():
     except Exception as e:
         return jsonify({"error": {"message": str(e)}}), 500
 
-import requests # Add requests library
-
 @app.route('/api/quiz/analyze', methods=['POST'])
 def analyze_quiz():
+    if not QUIZ_ANALYZE_WEBHOOK_URL:
+        return jsonify({"error": {"message": "Quiz analyze webhook is not configured"}}), 503
     try:
         data = request.json
         print(f"Received quiz data: {len(data)} fields") # Debug log
-        
-        # Forward the request to n8n webhook (Server-side forwarding avoids CORS)
-        n8n_url = 'https://alexis123.app.n8n.cloud/webhook/career-quiz-webhook'
-        
-        print(f"Forwarding to n8n: {n8n_url}") # Debug log
+        print("Forwarding quiz analyze request to configured webhook")
         
         # Use a timeout to prevent hanging if n8n is slow
-        response = requests.post(n8n_url, json=data, timeout=30)
+        response = requests.post(QUIZ_ANALYZE_WEBHOOK_URL, json=data, timeout=30)
         
         print(f"n8n response status: {response.status_code}") # Debug log
         
@@ -175,6 +186,47 @@ def analyze_quiz():
             
     except Exception as e:
         print(f"Quiz error: {e}")
+        return jsonify({"error": {"message": str(e)}}), 500
+
+def _get_request_user_id():
+    user_id = (request.headers.get("X-User-Id") or "").strip()
+    if not user_id:
+        return None
+    if len(user_id) > 128:
+        return None
+    return user_id
+
+@app.route('/api/ai/chat', methods=['POST'])
+def ai_chat():
+    if not API_KEY:
+        return jsonify({"error": {"message": "Server configuration error: Missing API Key"}}), 503
+    try:
+        data = request.json or {}
+        payload = {
+            "model": data.get("model", "deepseek-chat"),
+            "messages": data.get("messages", []),
+            "temperature": data.get("temperature", 0.5),
+            "stream": bool(data.get("stream", False)),
+        }
+        if not isinstance(payload["messages"], list) or not payload["messages"]:
+            return jsonify({"error": {"message": "messages is required"}}), 400
+
+        headers = {
+            'Authorization': f'Bearer {API_KEY}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+
+        upstream = requests.post(TARGET_URL, json=payload, headers=headers, timeout=60)
+        if upstream.status_code != 200:
+            return jsonify({"error": {"message": "Upstream API Error"}}), upstream.status_code
+
+        try:
+            return jsonify(upstream.json())
+        except Exception:
+            return jsonify({"error": {"message": "Invalid upstream response"}}), 502
+    except Exception as e:
+        print(f"ai_chat error: {e}")
         return jsonify({"error": {"message": str(e)}}), 500
 
 @app.route('/api/quiz/results', methods=['POST'])
@@ -243,16 +295,20 @@ def serve_static(path):
 @app.route('/api/chat', methods=['POST'])
 def proxy_chat():
     if not API_KEY:
-        return jsonify({"error": {"message": "Server configuration error: Missing API Key"}}), 401
+        return jsonify({"error": {"message": "Server configuration error: Missing API Key"}}), 503
 
     try:
+        user_id = _get_request_user_id()
+        if not user_id:
+            return jsonify({"error": {"message": "Missing X-User-Id"}}), 401
+
         # Get data from frontend
-        data = request.json
+        data = request.json or {}
         user_message = data.get('messages', [])[-1].get('content', '')
 
         # Save user message to DB
         if user_message:
-            database.save_message('user', user_message)
+            database.save_message(user_id, 'user', user_message)
 
         # Prepare request to DeepSeek
         headers = {
@@ -262,10 +318,10 @@ def proxy_chat():
         }
 
         # Stream response from DeepSeek
-        resp = requests.post(TARGET_URL, json=data, headers=headers, stream=True)
+        resp = requests.post(TARGET_URL, json=data, headers=headers, stream=True, timeout=60)
 
         if resp.status_code != 200:
-            return jsonify({"error": {"message": f"Upstream API Error: {resp.text}"}}), resp.status_code
+            return jsonify({"error": {"message": "Upstream API Error"}}), resp.status_code
 
         def generate():
             ai_response_content = ""
@@ -287,7 +343,7 @@ def proxy_chat():
             
             # Save AI response to DB after stream finishes
             if ai_response_content:
-                database.save_message('assistant', ai_response_content)
+                database.save_message(user_id, 'assistant', ai_response_content)
 
         return Response(stream_with_context(generate()), content_type='text/event-stream')
 
@@ -298,7 +354,10 @@ def proxy_chat():
 @app.route('/api/history', methods=['GET'])
 def get_history():
     try:
-        history = database.get_history()
+        user_id = _get_request_user_id()
+        if not user_id:
+            return jsonify({"error": {"message": "Missing X-User-Id"}}), 401
+        history = database.get_history(user_id=user_id)
         return jsonify(history)
     except Exception as e:
         return jsonify({"error": {"message": str(e)}}), 500
@@ -306,7 +365,10 @@ def get_history():
 @app.route('/api/clear', methods=['POST'])
 def clear_history():
     try:
-        database.clear_history()
+        user_id = _get_request_user_id()
+        if not user_id:
+            return jsonify({"error": {"message": "Missing X-User-Id"}}), 401
+        database.clear_history(user_id=user_id)
         return jsonify({"status": "ok"})
     except Exception as e:
         return jsonify({"error": {"message": str(e)}}), 500

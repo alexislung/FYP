@@ -1,15 +1,10 @@
 /* Cover Letter page – wizard, generate from draft CV (localStorage), same colors as cv-editor */
-const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
+const DEEPSEEK_API_URL = '/api/ai/chat';
 const DEEPSEEK_MODEL = 'deepseek-chat';
-const DEEPSEEK_API_KEY = 'sk-45a75bfb45174903ada13c17ceb828d4';
 const CV_DRAFT_KEY = 'easyjob_cv_draft';
 
 var coverLetterStep = 1;
 var coverLetterData = { experienceYears: '', student: '', schoolType: '', degree: '', fieldOfStudy: '', workingStyle: '', strengths: [] };
-
-function getDeepSeekApiKey() {
-  return (typeof DEEPSEEK_API_KEY === 'string' && DEEPSEEK_API_KEY.trim()) || '';
-}
 
 /** Build CV data shape from localStorage draft (same as collectCVData output) for API prompt */
 function getCVDataFromDraft() {
@@ -163,11 +158,6 @@ async function generateCoverLetterFromWizard() {
     alert('Please fill in Job Type, Position, and Company Name (Step 1).');
     return;
   }
-  var apiKey = getDeepSeekApiKey();
-  if (!apiKey) {
-    alert('Set DEEPSEEK_API_KEY in cover-letter.js to generate cover letters.');
-    return;
-  }
   var cvDataObj = getCVDataFromDraft();
   document.getElementById('coverLetterLoading').classList.remove('hidden');
   document.getElementById('coverLetterResult').classList.add('hidden');
@@ -184,7 +174,7 @@ async function generateCoverLetterFromWizard() {
   try {
     var response = await fetch(DEEPSEEK_API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: DEEPSEEK_MODEL,
         messages: [
@@ -192,8 +182,7 @@ async function generateCoverLetterFromWizard() {
           { role: 'user', content: userPrompt }
         ],
         temperature: 0.5
-      }),
-      mode: 'cors'
+      })
     });
     if (!response.ok) throw new Error('HTTP ' + response.status);
     var result = await response.json();

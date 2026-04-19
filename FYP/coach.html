@@ -174,6 +174,35 @@ const userInput = document.getElementById('userInput');
 const roleSelect = document.getElementById('role-select');
 let isInterviewMode = false;
 
+async function getChatUserId() {
+    // Prefer authenticated Supabase user id when available
+    try {
+        if (window.easyjobSupabase && window.easyjobSupabase.auth) {
+            const sessionRes = await window.easyjobSupabase.auth.getSession();
+            const session = sessionRes && sessionRes.data ? sessionRes.data.session : null;
+            if (session && session.user && session.user.id) {
+                return 'user:' + session.user.id;
+            }
+        }
+    } catch (_) {
+        // fallback below
+    }
+
+    // Fallback to device-scoped anonymous id (still isolates users by browser/device)
+    try {
+        let guestId = localStorage.getItem('easyjob_guest_id');
+        if (!guestId) {
+            guestId = (window.crypto && window.crypto.randomUUID)
+                ? window.crypto.randomUUID()
+                : ('guest-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10));
+            localStorage.setItem('easyjob_guest_id', guestId);
+        }
+        return 'guest:' + guestId;
+    } catch (_) {
+        return 'guest:fallback';
+    }
+}
+
 // Auto-scroll
 const scrollToBottom = () => messages.scrollTop = messages.scrollHeight;
 
@@ -250,9 +279,13 @@ async function callAI(text, isSystem = false) {
     }
 
     try {
+        const chatUserId = await getChatUserId();
         const res = await fetch('/api/chat', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-Id': chatUserId
+            },
             body: JSON.stringify({
                 model: "deepseek-chat",
                 messages: messagesPayload,
@@ -358,7 +391,13 @@ async function clearHistory() {
     messages.innerHTML = '';
     addMessage("Chat history cleared.", 'ai');
     // Call backend clear API if exists
-    try { await fetch('/api/clear', { method: 'POST' }); } catch(e) {}
+    try {
+        const chatUserId = await getChatUserId();
+        await fetch('/api/clear', {
+            method: 'POST',
+            headers: { 'X-User-Id': chatUserId }
+        });
+    } catch(e) {}
 }
 
 </script>

@@ -1,7 +1,6 @@
-/* CV Editor – form, steps, CV generation. Set DEEPSEEK_API_KEY below for AI features. Cover letter is on cover-letter.html */
-const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
+/* CV Editor – form, steps, CV generation. AI requests are proxied by backend (/api/ai/chat). */
+const DEEPSEEK_API_URL = '/api/ai/chat';
 const DEEPSEEK_MODEL = 'deepseek-chat';
-const DEEPSEEK_API_KEY = 'sk-45a75bfb45174903ada13c17ceb828d4'; // Set your key here for AI suggestions and cover letter
 
 const url = new URLSearchParams(location.search);
 const tmplFromUrl = url.get('template') || 'black-white';
@@ -385,8 +384,6 @@ function addBlock(box, title1, title2, start, end, desc, isExp) {
 }
 
 async function suggestBulletsForExp(btn) {
-  const apiKey = getDeepSeekApiKey();
-  if (!apiKey) { alert('API key is not set. Set DEEPSEEK_API_KEY in cv-editor.js to use AI suggestions.'); return; }
   const block = btn.closest('.exp-block');
   if (!block) return;
   const titleEl = block.querySelector('.exp-job-title');
@@ -401,7 +398,7 @@ async function suggestBulletsForExp(btn) {
   try {
     const res = await fetch(DEEPSEEK_API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: DEEPSEEK_MODEL,
         messages: [
@@ -409,23 +406,20 @@ async function suggestBulletsForExp(btn) {
           { role: 'user', content: 'Job title: ' + title + '. Company: ' + company + (responsibilities ? ' Current draft: ' + responsibilities : '') + ' Generate 2-3 professional bullet points for this role.' }
         ],
         temperature: 0.5
-      }),
-      mode: 'cors'
+      })
     });
     if (!res.ok) throw new Error('API error');
     const data = await res.json();
     const text = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) ? data.choices[0].message.content.trim() : '';
     if (respEl && text) respEl.value = text;
   } catch (e) {
-    alert('Could not get suggestions. Check your API key and try again.');
+    alert('Could not get suggestions. Please try again.');
   }
   btn.disabled = false;
   btn.textContent = 'Suggestion with AI';
 }
 
 async function improveAboutWithAI() {
-  const apiKey = getDeepSeekApiKey();
-  if (!apiKey) { alert('API key is not set. Set DEEPSEEK_API_KEY in cv-editor.js to use AI.'); return; }
   const textarea = document.getElementById('aboutTextarea');
   const current = (textarea && textarea.value) || '';
   const skills = Array.from(document.querySelectorAll('#skillsBox .tag')).map(function (t) { return t.firstChild ? t.firstChild.textContent : t.textContent; }).join(', ') || '';
@@ -436,7 +430,7 @@ async function improveAboutWithAI() {
   try {
     const res = await fetch(DEEPSEEK_API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: DEEPSEEK_MODEL,
         messages: [
@@ -444,15 +438,14 @@ async function improveAboutWithAI() {
           { role: 'user', content: 'Job title: ' + title + '. Skills: ' + skills + (current ? ' Current draft: ' + current : '') + ' Rewrite as a short About Me. Maximum 75 words. Output only the text.' }
         ],
         temperature: 0.5
-      }),
-      mode: 'cors'
+      })
     });
     if (!res.ok) throw new Error('API error');
     const data = await res.json();
     const text = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) ? data.choices[0].message.content.trim() : '';
     if (textarea && text) textarea.value = text;
   } catch (e) {
-    alert('Could not improve. Check your API key and try again.');
+    alert('Could not improve. Please try again.');
   }
   if (btn) { btn.disabled = false; btn.textContent = 'Improve with AI'; }
 }
@@ -647,10 +640,6 @@ function getCVTemplateHTML(templateId, data, photoDataUrl) {
   }
 
   return getCVTemplateHTML('black-white', data, photoDataUrl);
-}
-
-function getDeepSeekApiKey() {
-  return (typeof DEEPSEEK_API_KEY === 'string' && DEEPSEEK_API_KEY.trim()) || '';
 }
 
 function generateCV() {

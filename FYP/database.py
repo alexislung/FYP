@@ -5,18 +5,23 @@ import os
 import re
 import json
 
-# 数据库连接配置 (Supabase Connection Pooler)
-DB_HOST = "aws-1-ap-southeast-1.pooler.supabase.com"
-DB_NAME = "postgres"
-DB_USER = "postgres.ylpzdegpjbkrhfbqcbvc"
-DB_PASS = "Danta0902%4012"
-DB_PORT = "6543"
-
-DB_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+# 数据库连接配置
+DB_HOST = os.environ.get("DB_HOST", "").strip()
+DB_NAME = os.environ.get("DB_NAME", "").strip()
+DB_USER = os.environ.get("DB_USER", "").strip()
+DB_PASS = os.environ.get("DB_PASS", "").strip()
+DB_PORT = os.environ.get("DB_PORT", "").strip()
+DB_URL = os.environ.get("DATABASE_URL", "").strip()
 DB_SSL_MODE = "require"
+
+if not DB_URL and all([DB_HOST, DB_NAME, DB_USER, DB_PASS, DB_PORT]):
+    DB_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 def get_db_connection():
     try:
+        if not DB_URL:
+            print("❌ Database connection failed: DATABASE_URL is not configured")
+            return None
         conn = psycopg2.connect(DB_URL, sslmode=DB_SSL_MODE)
         return conn
     except Exception as e:
@@ -154,24 +159,53 @@ def get_jobs(limit=50, q=None, location=None, min_salary=None, category=None, jo
         print(f"⚠️ Get jobs failed: {e}")
         return []
 
-# --- 聊天记录相关 (保持不变) ---
-def save_message(role, content):
+def init_messages_table():
     try:
         conn = get_db_connection()
         if conn is None: return
         c = conn.cursor()
-        c.execute('INSERT INTO messages (role, content) VALUES (%s, %s)', (role, content))
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS messages (
+                id SERIAL PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                role TEXT NOT NULL,
+                content TEXT NOT NULL,
+                timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            );
+        """)
+        c.execute("ALTER TABLE messages ADD COLUMN IF NOT EXISTS user_id TEXT")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_messages_user_time ON messages (user_id, timestamp)")
+        conn.commit()
+        conn.close()
+        print("✅ Table 'messages' ensured.")
+    except Exception as e:
+        print(f"⚠️ Init messages table failed: {e}")
+
+# --- 聊天记录相关 ---
+def save_message(user_id, role, content):
+    try:
+        if not user_id:
+            return
+        conn = get_db_connection()
+        if conn is None: return
+        c = conn.cursor()
+        c.execute('INSERT INTO messages (user_id, role, content) VALUES (%s, %s, %s)', (user_id, role, content))
         conn.commit()
         conn.close()
     except Exception as e:
         print(f"⚠️ Save message failed: {e}")
 
-def get_history(limit=50):
+def get_history(user_id, limit=50):
     try:
+        if not user_id:
+            return []
         conn = get_db_connection()
         if conn is None: return []
         c = conn.cursor(cursor_factory=RealDictCursor)
-        c.execute('SELECT role, content, timestamp FROM messages ORDER BY timestamp ASC LIMIT %s', (limit,))
+        c.execute(
+            'SELECT role, content, timestamp FROM messages WHERE user_id = %s ORDER BY timestamp ASC LIMIT %s',
+            (user_id, limit)
+        )
         rows = c.fetchall()
         conn.close()
         result = []
@@ -185,12 +219,14 @@ def get_history(limit=50):
         print(f"⚠️ Get history failed: {e}")
         return []
 
-def clear_history():
+def clear_history(user_id):
     try:
+        if not user_id:
+            return
         conn = get_db_connection()
         if conn is None: return
         c = conn.cursor()
-        c.execute('DELETE FROM messages')
+        c.execute('DELETE FROM messages WHERE user_id = %s', (user_id,))
         conn.commit()
         conn.close()
     except Exception as e:
@@ -198,6 +234,7 @@ def clear_history():
 
 # 启动时测试连接
 init_db()
+init_messages_table()
 
 # --- 新增：获取单个职位详情 ---
 def get_job_by_id(job_id):
