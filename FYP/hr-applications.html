@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-HK" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Applications Dashboard - EASY Easy Job</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <link href="common.css" rel="stylesheet">
+  <style>
+    body { background: #f8fafc; }
+    .table-wrap { overflow-x: auto; }
+    .applications-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .applications-table th,
+    .applications-table td {
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0.75rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    .applications-table th {
+      color: #4b5563;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: #f9fafb;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    .summary-cell {
+      max-width: 360px;
+      line-height: 1.5;
+      color: #374151;
+      white-space: normal;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body class="bg-[#fafafa] text-neutral-900 antialiased min-h-screen flex flex-col">
+  <nav class="sticky top-0 z-30 border-b border-neutral-200/90 bg-white/90 backdrop-blur-md">
+    <div class="container mx-auto px-4 md:px-6 py-3.5 flex flex-col lg:flex-row items-center justify-between gap-4">
+      <a href="index.html" class="flex items-baseline gap-1.5 font-bold tracking-tight">
+        <span class="text-2xl text-cyan-600">EASY</span><span class="text-lg font-semibold text-neutral-900">Easy Job</span>
+      </a>
+      <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm font-medium text-neutral-600">
+        <a href="index.html" class="hover:text-cyan-600 transition">Home</a>
+        <a href="quiz.html" class="hover:text-cyan-600 transition">JOB Quiz</a>
+        <a href="job-search.html" class="hover:text-cyan-600 transition">JOB Search</a>
+        <a href="cv-template.html" class="hover:text-cyan-600 transition">CV Template</a>
+        <a href="coach.html" class="hover:text-cyan-600 transition">Interview Coach</a>
+      </div>
+      <div class="flex w-full lg:w-auto items-center gap-3 justify-center lg:justify-end">
+        <a href="login.html" id="authLink" class="shrink-0 text-sm font-medium text-neutral-600 hover:text-cyan-600 transition">Login</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="site-main flex-1 container mx-auto px-6 py-10 max-w-7xl">
+    <div id="businessGateBanner" class="hidden mb-8 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"></div>
+
+    <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-black">Applications Dashboard</h1>
+        <p class="text-gray-500 mt-2">Manage submitted applications, contact details, and CV summaries.</p>
+      </div>
+      <a href="hr-post.html" class="inline-flex items-center rounded-full border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 transition">
+        Back to Job Posting
+      </a>
+    </div>
+
+    <section class="bg-white rounded-3xl shadow-xl border-4 border-gray-100 p-5 md:p-7">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+        <div class="md:col-span-5">
+          <label class="block text-xs font-semibold text-gray-500 mb-1 uppercase">Search</label>
+          <input id="searchInput" type="text" placeholder="Name, email, company, role..." class="w-full rounded-xl border border-gray-300 px-4 py-2.5 focus:outline-none focus:border-black">
+        </div>
+        <div class="md:col-span-4">
+          <label class="block text-xs font-semibold text-gray-500 mb-1 uppercase">Filter by Job</label>
+          <select id="jobFilter" class="w-full rounded-xl border border-gray-300 px-4 py-2.5 focus:outline-none focus:border-black">
+            <option value="">All jobs</option>
+          </select>
+        </div>
+        <div class="md:col-span-3 flex md:justify-end items-end gap-2">
+          <button id="searchBtn" type="button" class="w-full md:w-auto rounded-xl bg-black text-white px-5 py-2.5 text-sm font-semibold hover:bg-gray-800 transition">Search</button>
+          <button id="resetBtn" type="button" class="w-full md:w-auto rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-semibold hover:bg-gray-50 transition">Reset</button>
+        </div>
+      </div>
+
+      <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div id="metaText" class="text-sm text-gray-500"></div>
+        <div class="flex items-center gap-2">
+          <button id="prevBtn" type="button" class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-semibold hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">Prev</button>
+          <span id="pageLabel" class="text-sm text-gray-500">Page 1</span>
+          <button id="nextBtn" type="button" class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-semibold hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">Next</button>
+        </div>
+      </div>
+
+      <div id="loadingText" class="mt-4 text-sm text-gray-500">Loading applications...</div>
+      <div id="emptyText" class="mt-4 hidden text-sm text-gray-500">No matching applications found.</div>
+
+      <div class="table-wrap mt-4 hidden" id="tableWrap">
+        <table class="applications-table">
+          <thead>
+            <tr>
+              <th>Submitted</th>
+              <th>Applicant</th>
+              <th>Email</th>
+              <th>Job</th>
+              <th>CV Summary</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="applicationsTbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-neutral-950 text-neutral-400 py-12 md:py-14 mt-0">
+    <div class="container mx-auto px-4 md:px-6 text-center text-sm">
+      <p class="font-medium text-neutral-500">© 2025 Easy Job. All rights reserved.</p>
+    </div>
+  </footer>
+  <script src="auth-ui.js"></script>
+
+  <script>
+    const PAGE_SIZE = 20;
+    let currentOffset = 0;
+    let hasNextPage = false;
+
+    function esc(text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatDateTime(isoText) {
+      if (!isoText) return '-';
+      try {
+        return new Date(isoText).toLocaleString();
+      } catch (_) {
+        return isoText;
+      }
+    }
+
+    async function ensureBusinessAccess() {
+      const banner = document.getElementById('businessGateBanner');
+      const client = window.getEasyjobSupabase && window.getEasyjobSupabase();
+      if (!client) {
+        if (banner) {
+          banner.classList.remove('hidden');
+          banner.textContent = 'Supabase is not initialized. Please sign in again.';
+        }
+        return false;
+      }
+      try {
+        const { data } = await client.auth.getSession();
+        const session = data && data.session;
+        if (!session || !session.user) {
+          window.location.href = 'login.html';
+          return false;
+        }
+        const meta = session.user.user_metadata || {};
+        const accountType = (meta.account_type || '').toString().toLowerCase();
+        localStorage.setItem('easyjob_account_type', accountType || 'jobseeker');
+        if (accountType !== 'business') {
+          if (banner) {
+            banner.classList.remove('hidden');
+            banner.textContent = 'Only Business accounts can access this page. Please sign up as a Business account.';
+          }
+          return false;
+        }
+        return true;
+      } catch (_) {
+        if (banner) {
+          banner.classList.remove('hidden');
+          banner.textContent = 'Unable to verify account type. Please sign in again.';
+        }
+        return false;
+      }
+    }
+
+    function updatePaginationUI() {
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const pageLabel = document.getElementById('pageLabel');
+      const pageNum = Math.floor(currentOffset / PAGE_SIZE) + 1;
+      if (prevBtn) prevBtn.disabled = currentOffset <= 0;
+      if (nextBtn) nextBtn.disabled = !hasNextPage;
+      if (pageLabel) pageLabel.textContent = 'Page ' + pageNum;
+    }
+
+    async function loadJobOptions() {
+      const select = document.getElementById('jobFilter');
+      if (!select) return;
+      try {
+        const res = await fetch('/api/jobs');
+        const data = await res.json();
+        if (!res.ok || !Array.isArray(data)) return;
+        const options = data
+          .filter(function (job) { return job && job.id; })
+          .map(function (job) {
+            return { id: job.id, label: (job.title || 'Untitled') + ' @ ' + (job.company || 'Unknown') };
+          });
+        const seen = {};
+        options.forEach(function (opt) {
+          if (seen[opt.id]) return;
+          seen[opt.id] = true;
+          const node = document.createElement('option');
+          node.value = String(opt.id);
+          node.textContent = opt.label;
+          select.appendChild(node);
+        });
+      } catch (_) {
+      }
+    }
+
+    function showFullResume(text) {
+      const modal = document.createElement('div');
+      modal.className = 'fixed inset-0 z-[60] bg-black bg-opacity-60 flex items-center justify-center px-4';
+      modal.innerHTML =
+        '<div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-6">' +
+        '<div class="flex items-center justify-between mb-4">' +
+        '<h3 class="text-xl font-black">Full CV Content</h3>' +
+        '<button type="button" class="text-gray-500 hover:text-black text-2xl leading-none" id="closeResumeModal">&times;</button>' +
+        '</div>' +
+        '<div class="max-h-[60vh] overflow-y-auto whitespace-pre-wrap text-sm text-gray-700 border border-gray-200 rounded-xl p-4">' + esc(text || '-') + '</div>' +
+        '</div>';
+      document.body.appendChild(modal);
+      const closeBtn = document.getElementById('closeResumeModal');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', function () { modal.remove(); });
+      }
+      modal.addEventListener('click', function (e) {
+        if (e.target === modal) modal.remove();
+      });
+    }
+
+    async function loadApplications() {
+      const loadingText = document.getElementById('loadingText');
+      const emptyText = document.getElementById('emptyText');
+      const tableWrap = document.getElementById('tableWrap');
+      const tbody = document.getElementById('applicationsTbody');
+      const metaText = document.getElementById('metaText');
+      const searchInput = document.getElementById('searchInput');
+      const jobFilter = document.getElementById('jobFilter');
+
+      if (loadingText) loadingText.classList.remove('hidden');
+      if (emptyText) emptyText.classList.add('hidden');
+      if (tableWrap) tableWrap.classList.add('hidden');
+      if (tbody) tbody.innerHTML = '';
+
+      const params = new URLSearchParams();
+      params.set('limit', String(PAGE_SIZE + 1));
+      params.set('offset', String(currentOffset));
+      const q = (searchInput && searchInput.value || '').trim();
+      const jobId = (jobFilter && jobFilter.value || '').trim();
+      if (q) params.set('q', q);
+      if (jobId) params.set('job_id', jobId);
+
+      try {
+        const res = await fetch('/api/hr/applications?' + params.toString());
+        const data = await res.json();
+        if (!res.ok) {
+          const msg = (data && data.error && data.error.message) ? data.error.message : ('HTTP ' + res.status);
+          throw new Error(msg);
+        }
+        const list = Array.isArray(data) ? data : [];
+        hasNextPage = list.length > PAGE_SIZE;
+        const pageItems = hasNextPage ? list.slice(0, PAGE_SIZE) : list;
+        updatePaginationUI();
+
+        if (metaText) {
+          metaText.textContent = pageItems.length + ' result' + (pageItems.length === 1 ? '' : 's') + ' on this page';
+        }
+        if (!pageItems.length) {
+          if (emptyText) emptyText.classList.remove('hidden');
+          return;
+        }
+
+        if (tbody) {
+          tbody.innerHTML = pageItems.map(function (item, idx) {
+            const submitted = formatDateTime(item.created_at);
+            const applicant = esc(item.name || '-');
+            const email = esc(item.email || '-');
+            const job = esc((item.job_title || 'Unknown role') + ' @ ' + (item.job_company || 'Unknown company'));
+            const summary = esc(item.resume_summary || item.message || '-');
+            const btnId = 'viewResumeBtn_' + idx;
+            return (
+              '<tr>' +
+              '<td>' + submitted + '</td>' +
+              '<td>' + applicant + '</td>' +
+              '<td><a href="mailto:' + email + '" class="text-cyan-700 hover:underline">' + email + '</a></td>' +
+              '<td>' + job + '</td>' +
+              '<td class="summary-cell">' + summary + '</td>' +
+              '<td><button type="button" id="' + btnId + '" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold hover:bg-gray-50">View Full CV</button></td>' +
+              '</tr>'
+            );
+          }).join('');
+
+          pageItems.forEach(function (item, idx) {
+            const btn = document.getElementById('viewResumeBtn_' + idx);
+            if (btn) {
+              btn.addEventListener('click', function () {
+                showFullResume(item.message || item.resume_summary || '');
+              });
+            }
+          });
+        }
+
+        if (tableWrap) tableWrap.classList.remove('hidden');
+      } catch (err) {
+        hasNextPage = false;
+        updatePaginationUI();
+        if (metaText) metaText.textContent = '';
+        if (emptyText) {
+          emptyText.textContent = 'Failed to load applications: ' + (err && err.message ? err.message : 'Unknown error');
+          emptyText.classList.remove('hidden');
+        }
+      } finally {
+        if (loadingText) loadingText.classList.add('hidden');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async function () {
+      const ok = await ensureBusinessAccess();
+      if (!ok) return;
+
+      await loadJobOptions();
+      await loadApplications();
+
+      const searchBtn = document.getElementById('searchBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const searchInput = document.getElementById('searchInput');
+      const jobFilter = document.getElementById('jobFilter');
+
+      if (searchBtn) {
+        searchBtn.addEventListener('click', function () {
+          currentOffset = 0;
+          loadApplications();
+        });
+      }
+      if (resetBtn) {
+        resetBtn.addEventListener('click', function () {
+          if (searchInput) searchInput.value = '';
+          if (jobFilter) jobFilter.value = '';
+          currentOffset = 0;
+          loadApplications();
+        });
+      }
+      if (searchInput) {
+        searchInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            currentOffset = 0;
+            loadApplications();
+          }
+        });
+      }
+      if (jobFilter) {
+        jobFilter.addEventListener('change', function () {
+          currentOffset = 0;
+          loadApplications();
+        });
+      }
+      if (prevBtn) {
+        prevBtn.addEventListener('click', function () {
+          if (currentOffset <= 0) return;
+          currentOffset = Math.max(0, currentOffset - PAGE_SIZE);
+          loadApplications();
+        });
+      }
+      if (nextBtn) {
+        nextBtn.addEventListener('click', function () {
+          if (!hasNextPage) return;
+          currentOffset += PAGE_SIZE;
+          loadApplications();
+        });
+      }
+      updatePaginationUI();
+    });
+  </script>
+</body>
+</html>

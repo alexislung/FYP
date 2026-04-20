@@ -114,8 +114,9 @@ def get_job_detail(job_id):
 def apply_job(job_id):
     try:
         data = request.json or {}
+        resume_text = (data.get("resume") or data.get("message") or "").strip()
         ok = database.apply_for_job(
-            job_id, data.get("name"), data.get("email"), data.get("message")
+            job_id, data.get("name"), data.get("email"), resume_text
         )
         if ok:
             return jsonify({"status": "success"})
@@ -131,11 +132,12 @@ def apply_job_smart():
 
         data = request.json or {}
         job_id = data.get("job_id")
+        resume_text = (data.get("resume") or data.get("message") or "").strip()
         database.apply_for_job(
             job_id,
             data.get("name"),
             data.get("email"),
-            data.get("message"),
+            resume_text,
         )
         score = random.randint(70, 95)
         if score > 80:
@@ -163,6 +165,28 @@ def apply_job_smart():
         )
     except Exception as e:
         print("Apply error:", e)
+        return jsonify({"error": {"message": str(e)}}), 500
+
+
+@app.route("/api/hr/applications", methods=["GET"])
+def get_hr_applications():
+    try:
+        limit = request.args.get("limit", default=100, type=int)
+        limit = max(1, min(limit if limit > 0 else 100, 500))
+        job_id = request.args.get("job_id", default=None, type=int)
+        offset = request.args.get("offset", default=0, type=int)
+        offset = max(0, offset or 0)
+        q = (request.args.get("q") or "").strip() or None
+        return jsonify(
+            database.get_applications(
+                limit=limit,
+                job_id=job_id,
+                q=q,
+                offset=offset,
+            )
+        )
+    except Exception as e:
+        print("Get HR applications error:", e)
         return jsonify({"error": {"message": str(e)}}), 500
 
 

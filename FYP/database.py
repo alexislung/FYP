@@ -275,6 +275,7 @@ def _run_ddl():
             message TEXT,
             created_at TIMESTAMPTZ DEFAULT NOW()
         )""",
+        "ALTER TABLE applications ADD COLUMN IF NOT EXISTS resume_summary TEXT",
         """CREATE TABLE IF NOT EXISTS quiz_results (
             id SERIAL PRIMARY KEY,
             created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -331,6 +332,15 @@ def _extract_salary_k_range(text):
     if len(nums) == 1:
         return (nums[0], nums[0])
     return (min(nums), max(nums))
+
+
+def _summarize_resume_text(text, max_len=220):
+    raw = " ".join((text or "").strip().split())
+    if not raw:
+        return ""
+    if len(raw) <= max_len:
+        return raw
+    return raw[: max_len - 3].rstrip() + "..."
 
 
 def _match_job_type(job, selected_types):
@@ -449,9 +459,10 @@ def apply_for_job(job_id, name, email, message):
         return False
     try:
         cur = conn.cursor()
+        resume_summary = _summarize_resume_text(message)
         cur.execute(
-            "INSERT INTO applications (job_id, name, email, message) VALUES (%s,%s,%s,%s)",
-            (job_id, name, email, message),
+            "INSERT INTO applications (job_id, name, email, message, resume_summary) VALUES (%s,%s,%s,%s,%s)",
+            (job_id, name, email, message, resume_summary),
         )
         conn.commit()
         conn.close()
@@ -463,6 +474,50 @@ def apply_for_job(job_id, name, email, message):
         except Exception:
             pass
         return False
+
+
+def get_applications(limit=100, job_id=None, q=None, offset=0):
+    conn = get_db_connection()
+    if not conn:
+        return []
+    try:
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        query = """
+            SELECT
+                a.id,
+                a.job_id,
+                a.name,
+                a.email,
+                a.message,
+                a.resume_summary,
+                a.created_at,
+                j.title AS job_title,
+                j.company AS job_company
+            FROM applications a
+            LEFT JOIN jobs j ON j.id = a.job_id
+            WHERE 1=1
+        """
+        params = []
+        if job_id is not None:
+            query += " AND a.job_id = %s"
+            params.append(job_id)
+        if q and str(q).strip():
+            like = f"%{str(q).strip()}%"
+            query += " AND (a.name ILIKE %s OR a.email ILIKE %s OR COALESCE(a.resume_summary, '') ILIKE %s OR COALESCE(j.title, '') ILIKE %s OR COALESCE(j.company, '') ILIKE %s)"
+            params.extend([like, like, like, like, like])
+        query += " ORDER BY a.created_at DESC LIMIT %s OFFSET %s"
+        params.extend([limit, max(0, int(offset or 0))])
+        cur.execute(query, tuple(params))
+        rows = cur.fetchall()
+        conn.close()
+        return [sanitize_row_for_json(dict(r)) for r in rows]
+    except Exception as e:
+        print("get_applications:", e)
+        try:
+            conn.close()
+        except Exception:
+            pass
+        return []
 
 
 def create_job(title, company, salary, category, location, requirements):

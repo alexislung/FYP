@@ -30,6 +30,35 @@
       color: #374151;
       margin-bottom: 0.25rem;
     }
+    .table-wrap {
+      overflow-x: auto;
+    }
+    .applications-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .applications-table th,
+    .applications-table td {
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0.75rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    .applications-table th {
+      color: #4b5563;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: #f9fafb;
+      position: sticky;
+      top: 0;
+    }
+    .summary-cell {
+      max-width: 320px;
+      line-height: 1.5;
+      color: #374151;
+    }
   </style>
 </head>
 <body class="bg-[#fafafa] text-neutral-900 antialiased min-h-screen flex flex-col">
@@ -69,6 +98,11 @@
     <div class="text-center mb-12">
       <h1 class="text-4xl font-black mb-4">Post a New Job</h1>
       <p class="text-gray-500 text-lg">Reach thousands of job seekers in Hong Kong.</p>
+      <div class="mt-4">
+        <a href="hr-applications.html" class="inline-flex items-center rounded-full border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 transition">
+          Open Applications Dashboard
+        </a>
+      </div>
     </div>
 
     <div class="bg-white rounded-3xl shadow-xl border-4 border-gray-100 p-8 md:p-12">
@@ -143,6 +177,33 @@
       </form>
     </div>
 
+    <section class="mt-10 bg-white rounded-3xl shadow-xl border-4 border-gray-100 p-6 md:p-8">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+        <div>
+          <h2 class="text-2xl font-black text-gray-900">Applications Management</h2>
+          <p class="text-sm text-gray-500 mt-1">Review seeker contact details and CV summaries.</p>
+        </div>
+        <button type="button" id="refreshApplicationsBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-sm font-semibold hover:bg-gray-50">Refresh</button>
+      </div>
+      <div id="applicationsMeta" class="text-sm text-gray-500 mb-3"></div>
+      <div id="applicationsLoading" class="text-sm text-gray-500">Loading applications...</div>
+      <div id="applicationsEmpty" class="hidden text-sm text-gray-500">No applications submitted yet.</div>
+      <div class="table-wrap hidden" id="applicationsTableWrap">
+        <table class="applications-table">
+          <thead>
+            <tr>
+              <th>Submitted</th>
+              <th>Applicant</th>
+              <th>Email</th>
+              <th>Job</th>
+              <th>CV Summary</th>
+            </tr>
+          </thead>
+          <tbody id="applicationsTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
   </main>
 
   
@@ -160,6 +221,78 @@
   <script src="auth-ui.js"></script>
 
   <script>
+    function formatDateTime(isoText) {
+      if (!isoText) return '-';
+      try {
+        return new Date(isoText).toLocaleString();
+      } catch (_) {
+        return isoText;
+      }
+    }
+
+    function esc(text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    async function loadApplications() {
+      const loadingEl = document.getElementById('applicationsLoading');
+      const emptyEl = document.getElementById('applicationsEmpty');
+      const tableWrap = document.getElementById('applicationsTableWrap');
+      const tbody = document.getElementById('applicationsTbody');
+      const meta = document.getElementById('applicationsMeta');
+
+      if (loadingEl) loadingEl.classList.remove('hidden');
+      if (emptyEl) emptyEl.classList.add('hidden');
+      if (tableWrap) tableWrap.classList.add('hidden');
+      if (tbody) tbody.innerHTML = '';
+
+      try {
+        const res = await fetch('/api/hr/applications?limit=200');
+        const data = await res.json();
+        if (!res.ok) throw new Error((data && data.error && data.error.message) || ('HTTP ' + res.status));
+        const items = Array.isArray(data) ? data : [];
+        if (meta) meta.textContent = items.length + ' application' + (items.length === 1 ? '' : 's');
+
+        if (!items.length) {
+          if (emptyEl) emptyEl.classList.remove('hidden');
+          return;
+        }
+
+        if (tbody) {
+          tbody.innerHTML = items.map(function (item) {
+            const submitted = formatDateTime(item.created_at);
+            const applicant = esc(item.name || '-');
+            const email = esc(item.email || '-');
+            const jobLabel = esc((item.job_title || 'Unknown role') + ' @ ' + (item.job_company || 'Unknown company'));
+            const summary = esc(item.resume_summary || item.message || '-');
+            return (
+              '<tr>' +
+              '<td>' + submitted + '</td>' +
+              '<td>' + applicant + '</td>' +
+              '<td><a href="mailto:' + email + '" class="text-cyan-700 hover:underline">' + email + '</a></td>' +
+              '<td>' + jobLabel + '</td>' +
+              '<td class="summary-cell">' + summary + '</td>' +
+              '</tr>'
+            );
+          }).join('');
+        }
+        if (tableWrap) tableWrap.classList.remove('hidden');
+      } catch (err) {
+        if (meta) meta.textContent = '';
+        if (emptyEl) {
+          emptyEl.textContent = 'Unable to load applications: ' + (err && err.message ? err.message : 'Unknown error');
+          emptyEl.classList.remove('hidden');
+        }
+      } finally {
+        if (loadingEl) loadingEl.classList.add('hidden');
+      }
+    }
+
     async function ensureBusinessAccess() {
       const banner = document.getElementById('businessGateBanner');
       const form = document.getElementById('post-job-form');
@@ -204,7 +337,14 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      await ensureBusinessAccess();
+      const ok = await ensureBusinessAccess();
+      if (ok) {
+        await loadApplications();
+      }
+      const refreshBtn = document.getElementById('refreshApplicationsBtn');
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', loadApplications);
+      }
     });
 
     document.getElementById('post-job-form').addEventListener('submit', async (e) => {
