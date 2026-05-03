@@ -71,6 +71,12 @@ function getCVDocTitle(draft, fallbackData) {
 
 async function autoSaveCVToAccount() {
   try {
+    if (window.ensureEasyjobSupabaseConfig) {
+      try {
+        await window.ensureEasyjobSupabaseConfig();
+      } catch (_) {
+      }
+    }
     var client = window.getEasyjobSupabase && window.getEasyjobSupabase();
     if (!client) return;
     var sessionRes = await client.auth.getSession();

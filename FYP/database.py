@@ -21,11 +21,6 @@ try:
 except ImportError:
     pass
 
-_DEFAULT_DATABASE_URL = (
-    "postgresql://postgres.ylpzdegpjbkrhfbqcbvc:iSPF6SzvdgUtE1M7@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
-)
-_DEFAULT_DB_SSL_MODE = "require"
-
 DB_HOST = os.environ.get("DB_HOST", "").strip()
 DB_NAME = os.environ.get("DB_NAME", "").strip()
 DB_USER = os.environ.get("DB_USER", "").strip()
@@ -36,14 +31,6 @@ DB_SSL_MODE = (os.environ.get("DB_SSL_MODE", "prefer") or "prefer").strip()
 
 if not DB_URL and all([DB_HOST, DB_NAME, DB_USER, DB_PASS, DB_PORT]):
     DB_URL = f"postgresql://{quote_plus(DB_USER)}:{quote_plus(DB_PASS)}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-if not (DB_URL or "").strip() and (_DEFAULT_DATABASE_URL or "").strip():
-    DB_URL = (_DEFAULT_DATABASE_URL or "").strip()
-if not os.environ.get("DB_SSL_MODE", "").strip() and (_DEFAULT_DB_SSL_MODE or "").strip():
-    DB_SSL_MODE = (_DEFAULT_DB_SSL_MODE or "").strip()
-if (_DEFAULT_DATABASE_URL or "").strip():
-    DB_URL = (_DEFAULT_DATABASE_URL or "").strip()
-    if not os.environ.get("DB_SSL_MODE", "").strip() and (_DEFAULT_DB_SSL_MODE or "").strip():
-        DB_SSL_MODE = (_DEFAULT_DB_SSL_MODE or "").strip()
 
 
 def is_database_url_configured():
@@ -72,6 +59,41 @@ def sanitize_row_for_json(row):
         else:
             out[k] = v
     return out
+
+
+def _supabase_project_ref_from_direct_host(hostname):
+    """db.PROJECT_REF.supabase.co → PROJECT_REF (for pooler username postgres.PROJECT_REF)."""
+    if not hostname:
+        return None
+    m = re.match(r"^db\.([^.]+)\.supabase\.co$", hostname.strip().lower())
+    return m.group(1) if m else None
+
+
+def _supabase_pooler_fallback_urls(db_url):
+    """When direct db.* hostname only resolves to IPv6, try *.pooler.supabase.com (IPv4).
+
+    User should still paste Session pooler URI from Dashboard into .env when possible;
+    this auto-tries common ap-southeast-1 pool hosts (override with SUPABASE_POOLER_REGION).
+    """
+    try:
+        u = urlparse(db_url)
+        ref = _supabase_project_ref_from_direct_host((u.hostname or "").lower())
+        if not ref or u.password is None:
+            return []
+        pq = quote_plus(unquote(u.password))
+        pool_user = quote_plus("postgres." + ref)
+        region = (os.environ.get("SUPABASE_POOLER_REGION") or "ap-southeast-1").strip()
+        if not region:
+            region = "ap-southeast-1"
+        out = []
+        for prefix in ("aws-0", "aws-1"):
+            ho = f"{prefix}-{region}.pooler.supabase.com"
+            for port in (5432, 6543):
+                netloc = f"{pool_user}:{pq}@{ho}:{port}"
+                out.append(urlunparse(("postgresql", netloc, "/postgres", "", "", "")))
+        return out
+    except Exception:
+        return []
 
 
 def _supabase_try_transaction_port(url):
@@ -158,7 +180,7 @@ def _connect_hostaddr(db_url, sslm, timeout_s):
     if ips and all(":" in x for x in ips):
         print(
             "Database: this host has only IPv6 from DNS; your network cannot reach it. "
-            "Use Supabase → Database → Transaction pooler URI (port 6543) in database.py."
+            "Use Supabase → Database → Transaction pooler URI (port 6543) in .env DATABASE_URL."
         )
     last = None
     for ip in ips:
@@ -200,7 +222,7 @@ def _connect_url_attempt(url, ssl_modes, timeout_s):
 
 def get_db_connection():
     if not DB_URL:
-        print("Database: no URL — set DATABASE_URL or _DEFAULT_DATABASE_URL in database.py")
+        print("Database: no URL — set DATABASE_URL or DB_* variables in environment / .env")
         return None
     try:
         timeout_s = int(os.environ.get("DB_CONNECT_TIMEOUT", "15") or "15")
@@ -226,12 +248,26 @@ def get_db_connection():
         if err2:
             last_err = err2
 
+    pool_cands = _supabase_pooler_fallback_urls(DB_URL)
+    if pool_cands:
+        print("Database: trying pooler.supabase.com hosts (IPv4) — set DATABASE_URL to Session pooler URI for faster connect…")
+    for pool_url in pool_cands:
+        conn, err2 = _connect_url_attempt(pool_url, ssl_modes, timeout_s)
+        if conn:
+            print(
+                "Database: connected via pooler host (IPv4 fallback). "
+                "For clarity, set DATABASE_URL in .env to the Session pooler URI from Supabase → Connect."
+            )
+            return conn
+        if err2:
+            last_err = err2
+
     if last_err is not None:
         low = str(last_err).lower()
         if "network is unreachable" in low or "無法識別" in str(last_err) or _is_dns_resolution_error(last_err):
             print(
                 "Database: Supabase `db.*` 在你網路上常只有 IPv6。請到後台 Project → Connect → "
-                "「Session pooler」複製整條 URI（aws-0-…區域要與專案一致），貼到 database.py 的 _DEFAULT_DATABASE_URL。"
+                "「Session pooler」複製整條 URI（aws-0-…區域要與專案一致），貼到專案 .env 的 DATABASE_URL。"
             )
         print("Database connection failed:", last_err)
         traceback.print_exc()

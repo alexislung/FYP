@@ -155,11 +155,18 @@
 
     async function ensureBusinessAccess() {
       const banner = document.getElementById('businessGateBanner');
+      if (window.ensureEasyjobSupabaseConfig) {
+        try {
+          await window.ensureEasyjobSupabaseConfig();
+        } catch (_) {
+        }
+      }
       const client = window.getEasyjobSupabase && window.getEasyjobSupabase();
       if (!client) {
         if (banner) {
           banner.classList.remove('hidden');
-          banner.textContent = 'Supabase is not initialized. Please sign in again.';
+          banner.textContent =
+            'Supabase is not initialized. Set SUPABASE_URL and SUPABASE_ANON_KEY in server .env, restart Flask, then try again.';
         }
         return false;
       }

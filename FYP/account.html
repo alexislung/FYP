@@ -191,9 +191,15 @@
     }
 
     async function loadAccountData() {
+      if (window.ensureEasyjobSupabaseConfig) {
+        try {
+          await window.ensureEasyjobSupabaseConfig();
+        } catch (_) {
+        }
+      }
       const client = window.getEasyjobSupabase && window.getEasyjobSupabase();
       if (!client) {
-        alert('Supabase is not initialized (check supabase-config.js).');
+        alert('Supabase is not initialized. Set SUPABASE_URL and SUPABASE_ANON_KEY in server .env and restart Flask.');
         return;
       }
 

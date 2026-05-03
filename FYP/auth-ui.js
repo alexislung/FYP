@@ -79,6 +79,12 @@
 
   async function initSupabaseIfPossible() {
     if (!window.supabase) return null;
+    if (window.ensureEasyjobSupabaseConfig) {
+      try {
+        await window.ensureEasyjobSupabaseConfig();
+      } catch (_) {
+      }
+    }
     var url = (window.SUPABASE_URL || '').trim();
     var key = (window.SUPABASE_ANON_KEY || '').trim();
     if (!url || !key) return null;

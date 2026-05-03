@@ -198,8 +198,14 @@ async function generateCoverLetterFromWizard() {
 
 async function saveCoverLetterToAccount() {
   try {
+    if (window.ensureEasyjobSupabaseConfig) {
+      try {
+        await window.ensureEasyjobSupabaseConfig();
+      } catch (_) {
+      }
+    }
     const client = window.getEasyjobSupabase && window.getEasyjobSupabase();
-    if (!client) throw new Error('Supabase is not initialized (check supabase-config.js).');
+    if (!client) throw new Error('Supabase is not initialized. Set SUPABASE_URL and SUPABASE_ANON_KEY in server .env and restart Flask.');
 
     const { data: sessionData } = await client.auth.getSession();
     const session = sessionData && sessionData.session;

@@ -139,8 +139,6 @@
 
   
   <script>
-    const supabaseClient = window.getEasyjobSupabase && window.getEasyjobSupabase();
-
     function togglePassword(btn) {
       const input = btn.previousElementSibling;
       const icon = btn.querySelector('svg');
@@ -159,8 +157,16 @@
       const email = document.getElementById('loginEmail').value.trim();
       const password = document.getElementById('loginPassword').value;
 
+      if (window.ensureEasyjobSupabaseConfig) {
+        try {
+          await window.ensureEasyjobSupabaseConfig();
+        } catch (_) {
+        }
+      }
+      var supabaseClient = window.getEasyjobSupabase && window.getEasyjobSupabase();
+
       if (!supabaseClient) {
-        alert('Supabase is not initialized (check supabase-config.js).');
+        alert('Supabase is not initialized. Set SUPABASE_URL and SUPABASE_ANON_KEY in server .env and restart Flask.');
         return;
       }
 

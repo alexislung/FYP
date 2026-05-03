@@ -1,16 +1,49 @@
+/**
+ * Loads Supabase public settings when they are not hard-coded in HTML.
+ *
+ * Prefer: Flask serves url + anon key from environment via GET /api/public/supabase,
+ * so keys are not committed to the repository (see SECURITY notes for teachers).
+ *
+ * Fallback: before this script, set window.SUPABASE_URL and window.SUPABASE_ANON_KEY
+ * (only for temporary local debugging; do not publish real secrets).
+ */
 (function () {
-  window.SUPABASE_URL = window.SUPABASE_URL || 'https://ylpzdegpjbkrhfbqcbvc.supabase.co';
-  window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || 'sb_publishable_otHMsDv-KIy08iRvQmS3rQ_5kf1GmSL';
+  var _configPromise = null;
+
+  window.ensureEasyjobSupabaseConfig = function ensureEasyjobSupabaseConfig() {
+    if (_configPromise) {
+      return _configPromise;
+    }
+    var hasLocal =
+      (window.SUPABASE_URL || "").trim().length > 0 && (window.SUPABASE_ANON_KEY || "").trim().length > 0;
+    if (hasLocal) {
+      _configPromise = Promise.resolve();
+      return _configPromise;
+    }
+    _configPromise = fetch("/api/public/supabase")
+      .then(function (res) {
+        return res.ok ? res.json() : {};
+      })
+      .then(function (data) {
+        if (data && data.url) window.SUPABASE_URL = String(data.url);
+        if (data && data.anon_key) window.SUPABASE_ANON_KEY = String(data.anon_key);
+      })
+      .catch(function () {});
+    return _configPromise;
+  };
 
   window.getEasyjobSupabase = function getEasyjobSupabase() {
     if (!window.supabase) return null;
-    if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return null;
-    if (window.easyjobSupabase) return window.easyjobSupabase;
-    try {
-      window.easyjobSupabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-      return window.easyjobSupabase;
-    } catch (_) {
-      return null;
+    var url = (window.SUPABASE_URL || "").trim();
+    var key = (window.SUPABASE_ANON_KEY || "").trim();
+    if (!url || !key) return null;
+    if (!window.easyjobSupabase) {
+      try {
+        window.easyjobSupabase = window.supabase.createClient(url, key);
+      } catch (_) {
+        return null;
+      }
     }
+    return window.easyjobSupabase;
   };
 })();

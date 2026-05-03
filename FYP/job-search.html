@@ -550,7 +550,7 @@
       } catch (e) {
         console.error(e);
         var msg = (e && e.message) ? String(e.message) : 'Request failed';
-        if (grid) grid.innerHTML = '<div class="col-span-full text-center text-red-500">' + msg + '</div><p class="col-span-full text-center text-sm text-gray-500 mt-2">Tip: Supabase → Connect → copy <strong>Session pooler</strong> URI (IPv4) or <strong>Transaction</strong> on port 6543; paste into <code class="bg-gray-100 px-1 rounded">database.py</code> <code class="bg-gray-100 px-1 rounded">_DEFAULT_DATABASE_URL</code>. Restart <code class="bg-gray-100 px-1 rounded">run_website.bat</code>.</p>';
+        if (grid) grid.innerHTML = '<div class="col-span-full text-center text-red-500">' + msg + '</div><p class="col-span-full text-center text-sm text-gray-500 mt-2">Tip: Supabase → Connect → copy <strong>Session pooler</strong> URI (IPv4) or <strong>Transaction</strong> on port 6543; set <code class="bg-gray-100 px-1 rounded">DATABASE_URL</code> in your project <code class="bg-gray-100 px-1 rounded">.env</code>. Restart <code class="bg-gray-100 px-1 rounded">run_website.bat</code>.</p>';
         if (meta) meta.textContent = '';
       } finally {
         if (btn) { btn.disabled = false; btn.textContent = 'Search'; }

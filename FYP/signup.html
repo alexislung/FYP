@@ -145,8 +145,6 @@
 
   
   <script>
-    const supabaseClient = window.getEasyjobSupabase && window.getEasyjobSupabase();
-
     function togglePassword() {
       const pwd = document.getElementById('password');
       const allPwd = document.querySelectorAll('input[type="password"]');
@@ -171,8 +169,16 @@
         return;
       }
 
+      if (window.ensureEasyjobSupabaseConfig) {
+        try {
+          await window.ensureEasyjobSupabaseConfig();
+        } catch (_) {
+        }
+      }
+      var supabaseClient = window.getEasyjobSupabase && window.getEasyjobSupabase();
+
       if (!supabaseClient) {
-        alert('Supabase is not initialized (check supabase-config.js).');
+        alert('Supabase is not initialized. Set SUPABASE_URL and SUPABASE_ANON_KEY in server .env and restart Flask.');
         return;
       }
 

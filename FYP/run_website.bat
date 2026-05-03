@@ -5,8 +5,8 @@ cd /d "%~dp0"
 echo.
 echo === EasyJob server ===
 echo Folder: %CD%
-echo Database: Supabase Connect - use Session pooler URI on IPv4; or port 6543 - paste into database.py.
-echo DeepSeek: edit server.py _DEFAULT_DEEPSEEK_API_KEY (or set DEEPSEEK_API_KEY).
+echo Secrets: copy .env.example to .env — set DATABASE_URL, DEEPSEEK_API_KEY, SUPABASE_URL, SUPABASE_ANON_KEY.
+echo Database: Session pooler URI (IPv4) or port 6543 from Supabase; put DATABASE_URL in .env (never commit .env).
 echo.
 echo Installing Python packages from this folder (requirements.txt)...
 python -m pip install -r "%~dp0requirements.txt"
