@@ -9,14 +9,20 @@
  */
 (function () {
   var _configPromise = null;
+  function applyPublicConfig(data) {
+    if (data && data.url) window.SUPABASE_URL = String(data.url);
+    if (data && data.anon_key) window.SUPABASE_ANON_KEY = String(data.anon_key);
+  }
+
+  function hasConfig() {
+    return (window.SUPABASE_URL || "").trim().length > 0 && (window.SUPABASE_ANON_KEY || "").trim().length > 0;
+  }
 
   window.ensureEasyjobSupabaseConfig = function ensureEasyjobSupabaseConfig() {
     if (_configPromise) {
       return _configPromise;
     }
-    var hasLocal =
-      (window.SUPABASE_URL || "").trim().length > 0 && (window.SUPABASE_ANON_KEY || "").trim().length > 0;
-    if (hasLocal) {
+    if (hasConfig()) {
       _configPromise = Promise.resolve();
       return _configPromise;
     }
@@ -25,8 +31,16 @@
         return res.ok ? res.json() : {};
       })
       .then(function (data) {
-        if (data && data.url) window.SUPABASE_URL = String(data.url);
-        if (data && data.anon_key) window.SUPABASE_ANON_KEY = String(data.anon_key);
+        applyPublicConfig(data);
+        if (hasConfig()) return;
+        return fetch("/supabase-public.json")
+          .then(function (res) {
+            return res.ok ? res.json() : {};
+          })
+          .then(function (fallbackData) {
+            applyPublicConfig(fallbackData);
+          })
+          .catch(function () {});
       })
       .catch(function () {});
     return _configPromise;
