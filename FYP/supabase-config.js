@@ -9,6 +9,8 @@
  */
 (function () {
   var _configPromise = null;
+  var FALLBACK_SUPABASE_URL = "https://ylpzdegpjbkrhfbqcbvc.supabase.co";
+  var FALLBACK_SUPABASE_ANON_KEY = "sb_publishable_otHMsDv-KIy08iRvQmS3rQ_5kf1GmSL";
   function applyPublicConfig(data) {
     if (data && data.url) window.SUPABASE_URL = String(data.url);
     if (data && data.anon_key) window.SUPABASE_ANON_KEY = String(data.anon_key);
@@ -39,10 +41,24 @@
           })
           .then(function (fallbackData) {
             applyPublicConfig(fallbackData);
+            if (!hasConfig()) {
+              window.SUPABASE_URL = FALLBACK_SUPABASE_URL;
+              window.SUPABASE_ANON_KEY = FALLBACK_SUPABASE_ANON_KEY;
+            }
           })
-          .catch(function () {});
+          .catch(function () {
+            if (!hasConfig()) {
+              window.SUPABASE_URL = FALLBACK_SUPABASE_URL;
+              window.SUPABASE_ANON_KEY = FALLBACK_SUPABASE_ANON_KEY;
+            }
+          });
       })
-      .catch(function () {});
+      .catch(function () {
+        if (!hasConfig()) {
+          window.SUPABASE_URL = FALLBACK_SUPABASE_URL;
+          window.SUPABASE_ANON_KEY = FALLBACK_SUPABASE_ANON_KEY;
+        }
+      });
     return _configPromise;
   };
 
