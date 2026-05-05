@@ -667,6 +667,15 @@ function generateCV() {
   var ae = document.activeElement;
   if (ae && typeof ae.blur === 'function') ae.blur();
   requestAnimationFrame(function () {
+    var titleField = cvFormField('jobTitle');
+    var currentTitle = readCvFormString('jobTitle');
+    if (!currentTitle) {
+      var firstExpTitleEl = document.querySelector('#expBox .exp-job-title');
+      var firstExpTitle = firstExpTitleEl && typeof firstExpTitleEl.value === 'string' ? firstExpTitleEl.value.trim() : '';
+      if (firstExpTitle && titleField) {
+        titleField.value = firstExpTitle;
+      }
+    }
     var cvData = collectCVData();
     var missing = [];
     if (!readCvFormString('firstName')) missing.push('First Name');
