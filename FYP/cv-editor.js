@@ -10,13 +10,25 @@ let step = 1;
 let saveDraftTimer = null;
 let saveAccountTimer = null;
 
+function cvFormField(key) {
+  var form = document.getElementById('form');
+  if (!form) return null;
+  return form.querySelector('[data-key="' + key + '"]');
+}
+
+function readCvFormString(key) {
+  var el = cvFormField(key);
+  if (!el || typeof el.value !== 'string') return '';
+  return el.value.trim();
+}
+
 function getDraftData() {
   const data = collectCVData();
   const jobTypeEl = document.getElementById('jobType');
   const positionEl = document.getElementById('position');
   const companyEl = document.getElementById('companyName');
-  const fnEl = document.querySelector('[data-key="firstName"]');
-  const lnEl = document.querySelector('[data-key="lastName"]');
+  const fnEl = cvFormField('firstName');
+  const lnEl = cvFormField('lastName');
   return {
     step: step,
     template: data.template,
@@ -34,8 +46,8 @@ function getDraftData() {
     jobType: (jobTypeEl && jobTypeEl.value) || '',
     position: (positionEl && positionEl.value) || '',
     companyName: (companyEl && companyEl.value) || '',
-    city: (document.querySelector('[data-key="city"]') && document.querySelector('[data-key="city"]').value) || '',
-    country: (document.querySelector('[data-key="country"]') && document.querySelector('[data-key="country"]').value) || ''
+    city: readCvFormString('city'),
+    country: readCvFormString('country')
   };
 }
 
@@ -147,11 +159,14 @@ function loadDraft() {
     if (stepEl) stepEl.classList.add('active');
     updateStep();
 
-    document.querySelectorAll('[data-key]').forEach(function (el) {
-      const key = el.dataset.key;
-      const val = draft[key] !== undefined ? draft[key] : (draft.personalInfo && draft.personalInfo[key]);
-      if (val !== undefined && val !== null) el.value = val;
-    });
+    var draftForm = document.getElementById('form');
+    if (draftForm) {
+      draftForm.querySelectorAll('[data-key]').forEach(function (el) {
+        const key = el.dataset.key;
+        const val = draft[key] !== undefined ? draft[key] : (draft.personalInfo && draft.personalInfo[key]);
+        if (val !== undefined && val !== null) el.value = val;
+      });
+    }
     if (draft.about !== undefined) {
       const aboutEl = document.getElementById('aboutTextarea');
       if (aboutEl) aboutEl.value = draft.about;
@@ -428,8 +443,7 @@ async function improveAboutWithAI() {
   const textarea = document.getElementById('aboutTextarea');
   const current = (textarea && textarea.value) || '';
   const skills = Array.from(document.querySelectorAll('#skillsBox .tag')).map(function (t) { return t.firstChild ? t.firstChild.textContent : t.textContent; }).join(', ') || '';
-  const jobTitleEl = document.querySelector('[data-key="jobTitle"]');
-  const title = (jobTitleEl && jobTitleEl.value) || '';
+  const title = readCvFormString('jobTitle');
   const btn = document.querySelector('button[onclick="improveAboutWithAI()"]');
   if (btn) { btn.disabled = true; btn.textContent = 'Improving...'; }
   try {
@@ -457,7 +471,9 @@ async function improveAboutWithAI() {
 
 function collectCVData() {
   const cvData = {};
-  document.querySelectorAll('[data-key]').forEach(function (i) { cvData[i.dataset.key] = i.value || ''; });
+  ['firstName', 'lastName', 'jobTitle', 'city', 'country', 'phone', 'email', 'about'].forEach(function (k) {
+    cvData[k] = readCvFormString(k);
+  });
   cvData.fullName = ((cvData.firstName || '') + ' ' + (cvData.lastName || '')).trim();
   cvData.skills = Array.from(document.querySelectorAll('#skillsBox .tag')).map(function (t) { return t.firstChild ? t.firstChild.textContent : t.textContent; }).join(', ') || '';
 
@@ -648,32 +664,45 @@ function getCVTemplateHTML(templateId, data, photoDataUrl) {
 }
 
 function generateCV() {
-  const cvData = collectCVData();
-  if (!cvData.personalInfo.fullName || !cvData.personalInfo.jobTitle || !cvData.personalInfo.email) {
-    alert('Please fill in required fields: First Name, Last Name, Job Title, and Email');
-    return;
-  }
-  document.getElementById('cvLoading').classList.remove('hidden');
-  document.getElementById('cvLoadingText').classList.remove('hidden');
-  document.getElementById('cvResult').classList.add('hidden');
+  var ae = document.activeElement;
+  if (ae && typeof ae.blur === 'function') ae.blur();
+  requestAnimationFrame(function () {
+    var cvData = collectCVData();
+    var missing = [];
+    if (!readCvFormString('firstName')) missing.push('First Name');
+    if (!readCvFormString('lastName')) missing.push('Last Name');
+    if (!readCvFormString('jobTitle')) missing.push('Job Title');
+    if (!readCvFormString('email')) missing.push('Email');
+    if (missing.length) {
+      var message = 'Please fill in required fields: ' + missing.join(', ');
+      if (missing.length > 1) {
+        message = 'Please fill in required fields: ' + missing.slice(0, -1).join(', ') + ', and ' + missing[missing.length - 1];
+      }
+      alert(message);
+      return;
+    }
+    document.getElementById('cvLoading').classList.remove('hidden');
+    document.getElementById('cvLoadingText').classList.remove('hidden');
+    document.getElementById('cvResult').classList.add('hidden');
 
-  function finishCV(photoDataUrl) {
-    const templateId = (cvData.template || 'black-white').toLowerCase();
-    const html = getCVTemplateHTML(templateId, cvData, photoDataUrl || null);
-    document.getElementById('cvLoading').classList.add('hidden');
-    document.getElementById('cvLoadingText').classList.add('hidden');
-    document.getElementById('cvResult').classList.remove('hidden');
-    document.getElementById('cvContent').innerHTML = html;
-    scheduleAccountAutoSave(300);
-  }
-  const photoInput = document.getElementById('photoInput');
-  if (photoInput && photoInput.files && photoInput.files[0]) {
-    const reader = new FileReader();
-    reader.onload = function () { finishCV(reader.result); };
-    reader.readAsDataURL(photoInput.files[0]);
-  } else {
-    finishCV(null);
-  }
+    function finishCV(photoDataUrl) {
+      const templateId = (cvData.template || 'black-white').toLowerCase();
+      const html = getCVTemplateHTML(templateId, cvData, photoDataUrl || null);
+      document.getElementById('cvLoading').classList.add('hidden');
+      document.getElementById('cvLoadingText').classList.add('hidden');
+      document.getElementById('cvResult').classList.remove('hidden');
+      document.getElementById('cvContent').innerHTML = html;
+      scheduleAccountAutoSave(300);
+    }
+    const photoInput = document.getElementById('photoInput');
+    if (photoInput && photoInput.files && photoInput.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function () { finishCV(reader.result); };
+      reader.readAsDataURL(photoInput.files[0]);
+    } else {
+      finishCV(null);
+    }
+  });
 }
 
 function downloadCVPDF() {
@@ -699,7 +728,7 @@ function downloadCVPDF() {
     btn.disabled = true;
     btn.textContent = 'Generating PDF...';
   }
-  const firstName = (document.querySelector('[data-key="firstName"]') && document.querySelector('[data-key="firstName"]').value) || 'My';
+  const firstName = readCvFormString('firstName') || 'My';
   const filename = (firstName.replace(/[^\w\s-]/g, '') || 'CV').trim() + '_CV.pdf';
   var opt = {
     margin: 10,

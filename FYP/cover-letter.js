@@ -5,6 +5,53 @@ const CV_DRAFT_KEY = 'easyjob_cv_draft';
 var coverLetterStep = 1;
 var coverLetterData = { experienceYears: '', student: '', schoolType: '', degree: '', fieldOfStudy: '', workingStyle: '', strengths: [] };
 
+function escapeHtml(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+var COVER_LETTER_PLACEHOLDER_HEADER = '[date]\n\n[address]\n\nDear [Name],\n\n';
+
+function normalizeCoverLetterPlain(text) {
+  var t = String(text || '').trim().replace(/\r\n/g, '\n');
+  t = t.replace(/\*\*([^*]+)\*\*/g, '$1');
+  return t;
+}
+
+function wrapCoverLetterWithPlaceholders(bodyOnly) {
+  var body = normalizeCoverLetterPlain(bodyOnly);
+  if (!body) return '';
+  if (body.indexOf('[date]') === 0 || body.indexOf('[address]') >= 0) return body;
+  return COVER_LETTER_PLACEHOLDER_HEADER + body;
+}
+
+function formatCoverLetterForDisplay(plain) {
+  var t = normalizeCoverLetterPlain(plain);
+  if (!t) return '';
+  return '<div class="whitespace-pre-wrap leading-relaxed">' + escapeHtml(t) + '</div>';
+}
+
+function setCoverLetterResult(plain) {
+  window.__coverLetterPlain = normalizeCoverLetterPlain(plain);
+  var el = document.getElementById('coverLetterContent');
+  if (el) el.innerHTML = formatCoverLetterForDisplay(window.__coverLetterPlain);
+  var hint = document.getElementById('coverLetterLayoutHint');
+  if (hint) hint.classList.remove('hidden');
+  var bodyLbl = document.getElementById('coverLetterBodyLabel');
+  if (bodyLbl) bodyLbl.classList.remove('hidden');
+}
+
+function getCoverLetterPlain() {
+  if (window.__coverLetterPlain && String(window.__coverLetterPlain).trim()) {
+    return String(window.__coverLetterPlain).trim();
+  }
+  var el = document.getElementById('coverLetterContent');
+  return el ? (el.innerText || '').trim() : '';
+}
+
 function getCVDataFromDraft() {
   try {
     var raw = localStorage.getItem(CV_DRAFT_KEY);
@@ -167,7 +214,19 @@ async function generateCoverLetterFromWizard() {
   var expList = (cvDataObj.experience || []).map(function (e) { return (e.title || '') + ' at ' + (e.company || '') + ': ' + (e.responsibilities || ''); }).filter(Boolean).join('\n') || 'Not specified';
   var strengths = (coverLetterData.strengths && coverLetterData.strengths.length) ? coverLetterData.strengths.join(', ') : '';
 
-  var userPrompt = 'Write a professional cover letter. Use the candidate information below and the questionnaire answers.\n\nTarget: ' + position + ' at ' + companyName + ' (Job type: ' + jobType + ').\n\nQuestionnaire: Experience length: ' + (coverLetterData.experienceYears || '') + '. Student: ' + (coverLetterData.student || '') + '. School type: ' + (coverLetterData.schoolType || '') + '. Degree: ' + (coverLetterData.degree || '') + '. Field of study: ' + (coverLetterData.fieldOfStudy || '') + '. Working style: ' + (coverLetterData.workingStyle || '') + '. Top strengths to highlight: ' + strengths + '.\n\nCandidate: ' + (p.fullName || '') + ', ' + (p.jobTitle || '') + '. Email: ' + (p.email || '') + '; Phone: ' + (p.phone || '') + '. About: ' + (cvDataObj.about || '') + '. Skills: ' + (cvDataObj.skills || '') + '. Languages: ' + langList + '. Education: ' + eduList + '. Experience: ' + expList + '.\n\nWrite the cover letter only. Professional tone, about one page. Highlight the chosen strengths where relevant.';
+  var userPrompt =
+    'Write ONLY the main body paragraphs of a formal cover letter (no letterhead, no salutation, no "Dear", no date, no addresses, no closing line like Sincerely).\n\n' +
+    'Target role: ' + position + ' at ' + companyName + ' (Job type: ' + jobType + ').\n\n' +
+    'Questionnaire: Experience length: ' + (coverLetterData.experienceYears || '') + '. Student: ' + (coverLetterData.student || '') + '. School type: ' + (coverLetterData.schoolType || '') + '. Degree: ' + (coverLetterData.degree || '') + '. Field of study: ' + (coverLetterData.fieldOfStudy || '') + '. Working style: ' + (coverLetterData.workingStyle || '') + '. Top strengths to highlight: ' + strengths + '.\n\n' +
+    'Candidate (for content only): ' + (p.fullName || '') + ', ' + (p.jobTitle || '') + '. Contact: ' + (p.email || '') + '; ' + (p.phone || '') + '. About: ' + (cvDataObj.about || '') + '. Skills: ' + (cvDataObj.skills || '') + '. Languages: ' + langList + '. Education: ' + eduList + '. Experience: ' + expList + '.\n\n' +
+    'Style: several clear paragraphs—interest in the role, relevant experience or study, fit with the company, strengths, and a short closing thanking the reader and offering to discuss or interview.\n\n' +
+    'Output plain text only: about three to five paragraphs, separated by a single blank line. Do not start with "Dear" or "To whom".';
+
+  var systemPrompt =
+    'You are a professional career coach. Output plain text only (no HTML, no Markdown).\n' +
+    'Output ONLY the middle paragraphs of the letter—the applicant\'s app will prepend fixed placeholders for date, address, and salutation.\n' +
+    'Do NOT output: [date], [address], [Name], "Dear", any real or fake postal/email address block, "Hiring Manager" as addressee, "Re:", or sign-off lines (Sincerely, Yours faithfully, Best regards) or the candidate\'s real name at the end.\n' +
+    'Write in first person. Do not invent street addresses. Keep a professional tone for about one page of body text.';
 
   try {
     var response = await fetch(DEEPSEEK_API_URL, {
@@ -176,7 +235,7 @@ async function generateCoverLetterFromWizard() {
       body: JSON.stringify({
         model: DEEPSEEK_MODEL,
         messages: [
-          { role: 'system', content: 'You are a professional career coach. Write clear, tailored cover letters. Output only the cover letter text.' },
+          { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
         temperature: 0.5
@@ -184,15 +243,21 @@ async function generateCoverLetterFromWizard() {
     });
     if (!response.ok) throw new Error('HTTP ' + response.status);
     var result = await response.json();
-    var coverLetterText = (result.choices && result.choices[0] && result.choices[0].message && result.choices[0].message.content) ? result.choices[0].message.content.trim() : '';
-    if (!coverLetterText) throw new Error('Empty response');
+    var bodyOnly = (result.choices && result.choices[0] && result.choices[0].message && result.choices[0].message.content) ? result.choices[0].message.content.trim() : '';
+    if (!bodyOnly) throw new Error('Empty response');
+    var coverLetterText = wrapCoverLetterWithPlaceholders(bodyOnly);
     document.getElementById('coverLetterLoading').classList.add('hidden');
     document.getElementById('coverLetterResult').classList.remove('hidden');
-    document.getElementById('coverLetterContent').textContent = coverLetterText;
+    setCoverLetterResult(coverLetterText);
   } catch (error) {
+    window.__coverLetterPlain = '';
+    var hintErr = document.getElementById('coverLetterLayoutHint');
+    if (hintErr) hintErr.classList.add('hidden');
+    var bodyLblErr = document.getElementById('coverLetterBodyLabel');
+    if (bodyLblErr) bodyLblErr.classList.add('hidden');
     document.getElementById('coverLetterLoading').classList.add('hidden');
     document.getElementById('coverLetterResult').classList.remove('hidden');
-    document.getElementById('coverLetterContent').innerHTML = '<div class="bg-red-50 border border-red-200 rounded-lg p-6"><p class="text-red-800 font-semibold">Error generating cover letter</p><p class="text-red-600 text-sm">' + (error.message || '') + '</p></div>';
+    document.getElementById('coverLetterContent').innerHTML = '<div class="bg-red-50 border border-red-200 rounded-lg p-6"><p class="text-red-800 font-semibold">Error generating cover letter</p><p class="text-red-600 text-sm">' + escapeHtml(error.message || '') + '</p></div>';
   }
 }
 
@@ -215,8 +280,7 @@ async function saveCoverLetterToAccount() {
       return;
     }
 
-    const contentEl = document.getElementById('coverLetterContent');
-    const text = contentEl ? (contentEl.textContent || '').trim() : '';
+    const text = getCoverLetterPlain();
     if (!text || text.length < 20) throw new Error('No cover letter content to save. Please generate it first.');
 
     const position = (document.getElementById('position') && document.getElementById('position').value) || 'Position';
@@ -242,8 +306,7 @@ async function saveCoverLetterToAccount() {
 }
 
 function copyCoverLetter() {
-  var contentEl = document.getElementById('coverLetterContent');
-  var content = contentEl ? contentEl.textContent : '';
+  var content = getCoverLetterPlain();
   navigator.clipboard.writeText(content).then(function () {
     alert('Cover letter copied to clipboard!');
   }).catch(function (err) {
@@ -253,8 +316,7 @@ function copyCoverLetter() {
 }
 
 function downloadCoverLetter() {
-  var contentEl = document.getElementById('coverLetterContent');
-  var content = contentEl ? contentEl.textContent : '';
+  var content = getCoverLetterPlain();
   var blob = new Blob([content], { type: 'text/plain' });
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
